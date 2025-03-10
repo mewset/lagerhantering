@@ -11,7 +11,7 @@ En enkel Flask-baserad webbapplikation för att hantera ett lager av reservdelar
 
 ## Krav
 - **Python**: 3.8 eller senare
-- **Beroenden**: Flask, schedule (anges i `requirements.txt`)
+- **Beroenden**: Flask, schedule (Installeras i Steg 3)
 
 ## Installation
 Följ dessa steg för att köra applikationen lokalt:
