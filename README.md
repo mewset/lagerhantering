@@ -41,3 +41,9 @@ Följ dessa steg för att köra applikationen lokalt:
 
 5. Öppna en webbläsare och gå till: http://localhost:5000/.
 
+## Tilltänkta Förbättringar
+- Migrera till en SQL lösning, tex. PostGreSQL för databas och loggning.
+- Användarroller och rättighetsvalidering
+- Utökad loggningsfunktionalitet
+- Utökning av Dashboard att visa tex. grafer och liknande analytiska verktyg
+- Centraliserad databaslösning (Azure/AWS) för att kunna ha flera siter som kör applikationen (med multipla databaser beroende på site, rättighetsvalidering för att koppla till relevat databas)
