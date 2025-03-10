@@ -22,17 +22,21 @@ Följ dessa steg för att köra applikationen lokalt:
    cd lagerhantering
 
 2. **Skapa en virtuell miljö (valfritt, men rekommenderat)**:
+    ```bash
     python -m venv venv
     source venv/bin/activate  # Linux/Mac
     venv\Scripts\activate     # Windows
 
 3. **Installera beroenden**:
+    ```bash
     pip install -r requirements.txt
 
 4. **Kör Applikationen**:
 - För produktion (utan debug)
+    ```bash
     python app.py
 - För utveckling (med debug)
+    ```bash
     python app.py --debug
 
 5. Öppna en webbläsare och gå till: http://localhost:5000/.
