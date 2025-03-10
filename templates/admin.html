@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hantera Lager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        .low { background-color: #f8d7da; }
+        .mid { background-color: #fff3cd; }
+        .high { background-color: #d4edda; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Hantera Lager</h1>
+        <a href="/" class="btn btn-secondary mb-3">Tillbaka till huvudsida</a>
+
+        <form id="addItemForm" class="mb-4">
+            <div class="mb-3">
+                <label for="product_family" class="form-label">Produktfamilj</label>
+                <input type="text" class="form-control" id="product_family" required placeholder="T.ex. E14 G1">
+            </div>
+            <div class="mb-3">
+                <label for="spare_part" class="form-label">Reservdel</label>
+                <input type="text" class="form-control" id="spare_part" required placeholder="T.ex. Palmrest">
+            </div>
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Antal</label>
+                <input type="number" class="form-control" id="quantity" value="1" min="0" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Lägg till</button>
+        </form>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Produktfamilj</th>
+                    <th>Reservdel</th>
+                    <th>Antal</th>
+                    <th>Låg (under)</th>
+                    <th>Mellan (under)</th>
+                    <th>Hög (över)</th>
+                    <th>Åtgärder</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+        </table>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script>
+        function loadInventory() {
+            fetch('/api/inventory')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('inventoryTable');
+                    tableBody.innerHTML = '';
+                    data.forEach(item => {
+                        const statusClass = item.quantity < item.low_status ? 'low' :
+                                          item.quantity < item.mid_status ? 'mid' : 'high';
+                        const row = `<tr class="${statusClass}">
+                            <td>${item.id}</td>
+                            <td>${item.product_family}</td>
+                            <td>${item.spare_part}</td>
+                            <td><input type="number" class="form-control quantity-input" data-id="${item.id}" value="${item.quantity}" min="0"></td>
+                            <td><input type="number" class="form-control low-input" data-id="${item.id}" value="${item.low_status}" min="0"></td>
+                            <td><input type="number" class="form-control mid-input" data-id="${item.id}" value="${item.mid_status}" min="0"></td>
+                            <td><input type="number" class="form-control high-input" data-id="${item.id}" value="${item.high_status}" min="0"></td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Radera</button></td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    document.querySelectorAll('.quantity-input, .low-input, .mid-input, .high-input').forEach(input => {
+                        input.addEventListener('change', function() {
+                            const id = this.dataset.id;
+                            const updates = {};
+                            if (this.classList.contains('quantity-input')) updates.quantity = parseInt(this.value);
+                            if (this.classList.contains('low-input')) updates.low_status = parseInt(this.value);
+                            if (this.classList.contains('mid-input')) updates.mid_status = parseInt(this.value);
+                            if (this.classList.contains('high-input')) updates.high_status = parseInt(this.value);
+                            fetch(`/api/inventory/${id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(updates)
+                            }).then(() => loadInventory());
+                        });
+                    });
+                });
+        }
+
+        document.getElementById('addItemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const product_family = document.getElementById('product_family').value;
+            const spare_part = document.getElementById('spare_part').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const id = Date.now();
+            fetch('/api/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, product_family, spare_part, quantity })
+            }).then(() => {
+                loadInventory();
+                this.reset();
+            });
+        });
+
+        function deleteItem(id) {
+            fetch(`/api/inventory/${id}`, { method: 'DELETE' })
+                .then(() => loadInventory());
+        }
+
+        window.onload = loadInventory;
+    </script>
+</body>
+</html>

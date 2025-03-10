@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loggar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1800px;
+            padding: 0 15px;
+        }
+        .log-header {
+            font-size: 4rem;
+            color: #212529;
+            margin-bottom: 1rem;
+        }
+        .log-table th, .log-table td {
+            vertical-align: middle;
+        }
+        .log-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .log-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .log-info {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .pagination-container {
+            margin-top: 1rem;
+        }
+        .filter-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center log-header">Loggar</h1>
+
+        <!-- Filter -->
+        <div class="mb-3 filter-container">
+            <div>
+                <label for="logFilter" class="form-label">Filtrera nivå:</label>
+                <select class="form-select w-auto" id="logFilter">
+                    <option value="all" selected>Alla</option>
+                    <option value="ERROR">Fel (ERROR)</option>
+                    <option value="WARNING">Varningar (WARNING)</option>
+                    <option value="INFO">Information (INFO)</option>
+                </select>
+            </div>
+            <div>
+                <label for="dateFilter" class="form-label">Filtrera datum:</label>
+                <input type="date" class="form-control w-auto" id="dateFilter" value="{{ current_date }}">
+            </div>
+        </div>
+
+        <!-- Loggtabell -->
+        <table class="table log-table">
+            <thead>
+                <tr>
+                    <th>Tidpunkt</th>
+                    <th>Nivå</th>
+                    <th>Meddelande</th>
+                </tr>
+            </thead>
+            <tbody id="logTableBody">
+                {% if logs %}
+                    {% for line in logs|reverse %}
+                        <tr class="{% if '[ERROR]' in line %}log-error{% elif '[WARNING]' in line %}log-warning{% else %}log-info{% endif %}" 
+                            data-level="{{ 'ERROR' if '[ERROR]' in line else 'WARNING' if '[WARNING]' in line else 'INFO' }}"
+                            data-date="{{ line.split(' ')[0] }}">
+                            <td>{{ line.split(' ')[0] + ' ' + line.split(' ')[1].split(',')[0] }}</td>
+                            <td>
+                                <svg class="bi flex-shrink-0 me-2" width="20" height="20" role="img" aria-label="Log level:">
+                                    <use xlink:href="{% if '[ERROR]' in line %}#exclamation-triangle-fill{% else %}#info-circle-fill{% endif %}"/>
+                                </svg>
+                                {{ 'ERROR' if '[ERROR]' in line else 'WARNING' if '[WARNING]' in line else 'INFO' }}
+                            </td>
+                            <td>{{ line.split('] ')[1] }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center">Inga loggar tillgängliga ännu.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Paginering -->
+        <div class="pagination-container d-flex justify-content-center">
+            <nav aria-label="Log pagination">
+                <ul class="pagination" id="pagination"></ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- SVG-defs för Bootstrap-ikoner -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </symbol>
+        <symbol id="info-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+        </symbol>
+    </svg>
+
+    {% include 'footer.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script>
+        const logsPerPage = 10;
+        let currentPage = 1;
+        let allLogs = Array.from(document.querySelectorAll('#logTableBody tr'));
+        let filteredLogs = allLogs;
+
+        function renderLogs() {
+            const startIndex = (currentPage - 1) * logsPerPage;
+            const endIndex = startIndex + logsPerPage;
+            const logsToShow = filteredLogs.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+            if (logsToShow.length > 0) {
+                logsToShow.forEach(log => tbody.appendChild(log));
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">Inga loggar matchar filtret.</td></tr>';
+            }
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const prevItem = document.createElement('li');
+            prevItem.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevItem.innerHTML = '<a class="page-link" href="#">Föregående</a>';
+            prevItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderLogs();
+                }
+            });
+            pagination.appendChild(prevItem);
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageItem = document.createElement('li');
+                pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                pageItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderLogs();
+                });
+                pagination.appendChild(pageItem);
+            }
+
+            const nextItem = document.createElement('li');
+            nextItem.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextItem.innerHTML = '<a class="page-link" href="#">Nästa</a>';
+            nextItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderLogs();
+                }
+            });
+            pagination.appendChild(nextItem);
+        }
+
+        // Filtreringsfunktion för nivå
+        document.getElementById('logFilter').addEventListener('change', applyFilters);
+
+        // Filtreringsfunktion för datum
+        document.getElementById('dateFilter').addEventListener('change', applyFilters);
+
+        function applyFilters() {
+            const levelFilter = document.getElementById('logFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredLogs = allLogs.filter(log => {
+                const levelMatch = levelFilter === 'all' || log.getAttribute('data-level') === levelFilter;
+                const dateMatch = !dateFilter || log.getAttribute('data-date') === dateFilter;
+                return levelMatch && dateMatch;
+            });
+
+            currentPage = 1;
+            renderLogs();
+        }
+
+        // Initial rendering
+        window.onload = function() {
+            applyFilters(); // Applicera dagens datum som standard
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Temporära filer och loggar
+app.log
+data/
+db_backup/
+
+# Python virtuell miljö och cache
+venv/
+__pycache__/
+*.pyc
+
+# IDE-filer
+.idea/
+.vscode/
