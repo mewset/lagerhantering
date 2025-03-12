@@ -54,4 +54,4 @@ Följ dessa steg för att köra applikationen lokalt eller i produktion:
 ## Utveckling
 - För att bidra, skapa en pull request med ändringar
 
- . . . . . . . .
+ . . . . . . . . .
