@@ -35,7 +35,7 @@ def check_git_version(manual=False):
         remote_commit = subprocess.check_output(["git", "rev-parse", "origin/main"], text=True).strip()
         logger.info(f"Remote commit-hash (GitHub): {remote_commit}")
         
-        if local_commit != remote_commit:  # Fixat skrivfel här
+        if local_commit != remote_commit:
             logger.warning("Lokala och remote versioner skiljer sig.")
             if manual:
                 logger.info("Manuell kontroll hittade ny version. Förbereder omstart för uppdatering.")
@@ -223,8 +223,20 @@ def check_version():
     """API-endpoint för manuell versionskontroll."""
     result = check_git_version(manual=True)
     if result["update_needed"]:
-        logger.info("Ny version hittades via manuell kontroll. Startar om servern.")
-        threading.Timer(1.0, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()  # Starta om efter 1 sekund
+        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
+        try:
+            # Kör git pull direkt här för manuell uppdatering
+            pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
+            if pull_result.returncode == 0:
+                logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
+                # Försök med os.execv först
+                threading.Timer(2.0, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
+            else:
+                logger.error("Misslyckades med att uppdatera:\n" + pull_result.stderr)
+                result = {"update_needed": False, "message": "Uppdatering misslyckades."}
+        except Exception as e:
+            logger.error(f"Fel vid manuell uppdatering: {str(e)}")
+            result = {"update_needed": False, "message": "Ett oväntat fel inträffade vid uppdatering."}
     return jsonify(result)
 
 if __name__ == "__main__":
