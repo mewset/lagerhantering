@@ -9,6 +9,7 @@ import threading
 import shutil
 import logging
 import subprocess
+import werkzeug.serving
 
 app = Flask(__name__)
 
@@ -23,6 +24,9 @@ logger = logging.getLogger(__name__)
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
+
+# Global variabel för att hålla serverreferens
+server = None
 
 def check_git_version(manual=False):
     """Kontrollera om lokal version matchar GitHub och hantera uppdatering."""
@@ -48,9 +52,8 @@ def check_git_version(manual=False):
             result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
-                logger.info("Startar om applikationen via batch-skript...")
-                subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
-                sys.exit(0)
+                logger.info("Startar om applikationen...")
+                os.execv(sys.executable, [sys.executable] + sys.argv)
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + result.stderr)
                 return False if not manual else {"update_needed": False, "message": "Uppdatering misslyckades."}
@@ -222,24 +225,27 @@ def delete_item(item_id):
 @app.route("/api/check_version", methods=["GET"])
 def check_version():
     """API-endpoint för manuell versionskontroll."""
+    global server
     result = check_git_version(manual=True)
     if result["update_needed"]:
-        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern via batch-skript.")
+        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
         try:
             pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if pull_result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
-                # Skicka svaret först innan omstart
+                # Skicka svaret först
                 response = Response(
                     json.dumps({"update_needed": True, "message": "Ny version hittades. Servern startas om för att uppdatera."}),
                     status=200,
                     mimetype='application/json'
                 )
-                # Starta om efter att svaret skickats
+                # Starta om i en tråd efter att svaret skickats
                 def restart_server():
-                    time.sleep(1)  # Vänta 1 sekund för att säkerställa att svaret når klienten
-                    subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
-                    sys.exit(0)
+                    time.sleep(1)  # Vänta 1 sekund för att svaret ska nå klienten
+                    if server:
+                        server.shutdown()  # Stäng Flask-servern för att frigöra porten
+                    logger.info("Startar om servern med VENV Python...")
+                    os.execv(sys.executable, [sys.executable] + sys.argv)
                 threading.Thread(target=restart_server, daemon=True).start()
                 return response
             else:
@@ -255,4 +261,7 @@ if __name__ == "__main__":
     logger.info("Läser in modul: Schemaläggning")
     start_scheduler()
     logger.info("Servern är redo!")
-    app.run(debug=debug, host="0.0.0.0", port=5000)
+    # Kör servern med referens för att kunna stänga den
+    server = werkzeug.serving.run_simple(
+        "0.0.0.0", 5000, app, use_debugger=debug, use_reloader=False
+    )
