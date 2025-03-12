@@ -3,18 +3,15 @@
 En enkel Flask-baserad webbapplikation för att hantera ett lager av reservdelar. Inkluderar funktioner för att lägga till och ta bort reservdelar, visa lagerstatus i en dashboard, automatiska backuper, loggning av händelser och automatisk versionsvalidering mot GitHub.
 
 ## Funktioner
-- **Huvudsida (`/`)**: Lägg till eller ta bort reservdelar och visa aktuellt lager. Reservdelar behålls med antal 0 vid subtraktion, men kan raderas manuellt.
-- **Admin-sida (`/admin`)**: Hantera lagerposter (lägg till, uppdatera, radera) med bekräftelsedialog vid radering.
-- **Dashboard (`/dashboard`)**: Översikt av lagerstatus med färgkodning (rött för lågt, gult för mellan, grönt för högt). Visar endast reservdelar med antal > 0.
+- **Huvudsida (`/`)**: Lägg till eller ta bort reservdelar och visa aktuellt lager.
+- **Admin-sida (`/admin`)**: Hantera lagerposter (lägg till, uppdatera, radera)
+- **Dashboard (`/dashboard`)**: Översikt av lagerstatus med färgkodning (rött för lågt, gult för mellan, grönt för högt).
 - **Loggar (`/logs`)**: Visa systemloggar med paginering och filter för nivå (ERROR, WARNING, INFO) och datum.
 - **Backup**: Automatiska backuper av lagerdatan varannan dag kl. 17:00 (mån-fre) till `db_backup/`.
 - **Versionsvalidering**: Vid uppstart jämförs lokal version med GitHub (`origin/main`). Om en nyare version finns, körs `git pull` och appen startas om automatiskt.
 
-### Designförändringar
-- Footern har tagits bort från huvudsida och admin-sida för en renare och mer funktionell användarupplevelse.
-
 ## Krav
-- **Python**: 3.8 eller senare
+- **Python**: 3.8 eller senare (installeras via https://www.python.org/)
 - **Beroenden**: Flask, schedule (installeras via `requirements.txt`)
 - **Git**: Krävs för versionsvalidering och automatiska uppdateringar
 
