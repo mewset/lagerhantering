@@ -9,9 +9,11 @@ import threading
 import shutil
 import logging
 import subprocess
+import psutil  # Ny import för att hantera processer
 
 app = Flask(__name__)
 
+# Konfigurera loggning
 logging.basicConfig(
     filename='app.log',
     level=logging.INFO,
@@ -23,6 +25,18 @@ logger = logging.getLogger(__name__)
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
+
+# Funktion för att avsluta processer som använder en specifik port
+def kill_processes_using_port(port):
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            connections = proc.connections()
+            for conn in connections:
+                if conn.laddr.port == port:
+                    proc.terminate()
+                    logger.info(f"Avslutade process {proc.pid} som använde port {port}")
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass  # Ignorera processer vi inte kan komma åt eller som redan är borta
 
 def check_git_version(manual=False):
     """Kontrollera om lokal version matchar GitHub och hantera uppdatering."""
@@ -49,6 +63,7 @@ def check_git_version(manual=False):
             if result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
                 logger.info("Startar om applikationen...")
+                kill_processes_using_port(5000)  # Avsluta processer på port 5000
                 subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
                 sys.exit(0)
             else:
@@ -65,7 +80,6 @@ def check_git_version(manual=False):
         return False if not manual else {"update_needed": False, "message": "Ett oväntat fel inträffade."}
 
 logger.info("Server Startas...")
-logger.info(f"Using Python executable: {sys.executable}")
 logger.info("Läser in modul: Filhantering")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
@@ -236,12 +250,11 @@ def check_version():
                     status=200,
                     mimetype='application/json'
                 )
-                # Starta ny process och avsluta gammal
+                # Starta ny process och avsluta gammal i en separat tråd
                 def restart_server():
                     time.sleep(1)  # Vänta för att svaret ska nå klienten
-                    logger.info(f"Startar ny serverprocess med VENV Python: {sys.executable}")
-                    subprocess.Popen(["cmd.exe", "/c", sys.executable, "app.py"], cwd=os.getcwd())
-                    logger.info("Avslutar gammal process...")
+                    kill_processes_using_port(5000)  # Avsluta processer på port 5000
+                    subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
                     sys.exit(0)
                 threading.Thread(target=restart_server, daemon=True).start()
                 return response
