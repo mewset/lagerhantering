@@ -13,17 +13,28 @@ function loadInventory() {
         .catch(error => console.error('Fel vid laddning av inventarie:', error));
 }
 
-function updateTable() {
+function getStatusClass(item) {
+    if (item.quantity <= item.low_status) return 'table-danger'; // Rött för lågt
+    if (item.quantity >= item.high_status) return 'table-success'; // Grönt för högt
+    return 'table-warning'; // Gult för normalt
+}
+
+function updateTable(filter = '') {
     const tableBody = document.getElementById('inventoryTable');
     tableBody.innerHTML = '';
-    inventoryData.forEach(item => {
-        const row = `<tr>
+    const filteredData = filter 
+        ? inventoryData.filter(item => 
+            item.product_family.toLowerCase().includes(filter.toLowerCase()) || 
+            item.spare_part.toLowerCase().includes(filter.toLowerCase()))
+        : inventoryData;
+    filteredData.forEach(item => {
+        const row = `<tr class="${getStatusClass(item)}">
             <td>${item.id}</td>
             <td>${item.product_family}</td>
             <td>${item.spare_part}</td>
             <td>${item.quantity}</td>
             <td>
-                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})">Ta Reservdel</button>
+                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})">Ta reservdel</button>
                 <button class="btn btn-danger btn-sm" onclick="showDeleteToast(${item.id})">Radera</button>
             </td>
         </tr>`;
@@ -110,5 +121,9 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
 });
 
 document.getElementById('product_family').addEventListener('change', updateSparePartDropdown);
+
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    updateTable(e.target.value);
+});
 
 window.onload = loadInventory;
