@@ -251,7 +251,7 @@ def check_version():
                 def restart_server():
                     time.sleep(1)  # Vänta för att svaret ska nå klienten
                     kill_processes_using_port(5000)  # Avsluta processer på port 5000
-                    subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
+                    subprocess.Popen(['cmd.exe', '/k', sys.executable, 'app.py'], cwd=os.getcwd())
                     sys.exit(0)
                 threading.Thread(target=restart_server, daemon=True).start()
                 return response
