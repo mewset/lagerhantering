@@ -48,8 +48,9 @@ def check_git_version(manual=False):
             result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
-                logger.info("Startar om applikationen...")
-                os.execv(sys.executable, [sys.executable] + sys.argv)
+                logger.info("Startar om applikationen via batch-skript...")
+                subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
+                sys.exit(0)  # Avsluta nuvarande process omedelbart
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + result.stderr)
                 return False if not manual else {"update_needed": False, "message": "Uppdatering misslyckades."}
@@ -223,14 +224,13 @@ def check_version():
     """API-endpoint för manuell versionskontroll."""
     result = check_git_version(manual=True)
     if result["update_needed"]:
-        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
+        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern via batch-skript.")
         try:
-            # Kör git pull direkt här för manuell uppdatering
             pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if pull_result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
-                # Försök med os.execv först
-                threading.Timer(2.0, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
+                subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
+                sys.exit(0)  # Avsluta nuvarande process direkt
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + pull_result.stderr)
                 result = {"update_needed": False, "message": "Uppdatering misslyckades."}
