@@ -24,6 +24,7 @@ DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
+# Superduper versionskontroll
 def check_git_version():
     """Kontrollera om lokal version matchar GitHub och uppdatera vid behov."""
     try:
