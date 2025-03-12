@@ -9,7 +9,6 @@ import threading
 import shutil
 import logging
 import subprocess
-import werkzeug.serving
 
 app = Flask(__name__)
 
@@ -24,9 +23,6 @@ logger = logging.getLogger(__name__)
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
-
-# Global variabel för att hålla serverreferens
-server = None
 
 def check_git_version(manual=False):
     """Kontrollera om lokal version matchar GitHub och hantera uppdatering."""
@@ -53,7 +49,8 @@ def check_git_version(manual=False):
             if result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
                 logger.info("Startar om applikationen...")
-                os.execv(sys.executable, [sys.executable] + sys.argv)
+                subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
+                sys.exit(0)
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + result.stderr)
                 return False if not manual else {"update_needed": False, "message": "Uppdatering misslyckades."}
@@ -68,6 +65,7 @@ def check_git_version(manual=False):
         return False if not manual else {"update_needed": False, "message": "Ett oväntat fel inträffade."}
 
 logger.info("Server Startas...")
+logger.info(f"Using Python executable: {sys.executable}")
 logger.info("Läser in modul: Filhantering")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
@@ -225,7 +223,6 @@ def delete_item(item_id):
 @app.route("/api/check_version", methods=["GET"])
 def check_version():
     """API-endpoint för manuell versionskontroll."""
-    global server
     result = check_git_version(manual=True)
     if result["update_needed"]:
         logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
@@ -239,13 +236,13 @@ def check_version():
                     status=200,
                     mimetype='application/json'
                 )
-                # Starta om i en tråd efter att svaret skickats
+                # Starta ny process och avsluta gammal
                 def restart_server():
-                    time.sleep(1)  # Vänta 1 sekund för att svaret ska nå klienten
-                    if server:
-                        server.shutdown()  # Stäng Flask-servern för att frigöra porten
-                    logger.info("Startar om servern med VENV Python...")
-                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                    time.sleep(1)  # Vänta för att svaret ska nå klienten
+                    logger.info(f"Startar ny serverprocess med VENV Python: {sys.executable}")
+                    subprocess.Popen(["cmd.exe", "/c", sys.executable, "app.py"], cwd=os.getcwd())
+                    logger.info("Avslutar gammal process...")
+                    sys.exit(0)
                 threading.Thread(target=restart_server, daemon=True).start()
                 return response
             else:
@@ -261,7 +258,4 @@ if __name__ == "__main__":
     logger.info("Läser in modul: Schemaläggning")
     start_scheduler()
     logger.info("Servern är redo!")
-    # Kör servern med referens för att kunna stänga den
-    server = werkzeug.serving.run_simple(
-        "0.0.0.0", 5000, app, use_debugger=debug, use_reloader=False
-    )
+    app.run(debug=debug, host="0.0.0.0", port=5000)
