@@ -135,22 +135,21 @@
             fetch('/api/check_version')
                 .then(response => response.json())
                 .then(data => {
-                    setTimeout(() => {
-                        toastBody.innerHTML = data.message;
-                        if (data.update_needed) {
-                            versionToastEl.classList.add('success');
-                        } else if (data.message.toLowerCase().includes('fel')) {
-                            versionToastEl.classList.add('error');
-                        } else {
-                            versionToastEl.classList.add('success');
-                        }
-                        if (!data.update_needed) {
-                            setTimeout(() => versionToast.hide(), 2000);
-                        }
-                    }, 1000);
+                    toastBody.innerHTML = data.message;
+                    if (data.update_needed) {
+                        versionToastEl.classList.add('success');
+                        // Visa toasten längre vid uppdatering
+                        setTimeout(() => versionToast.hide(), 3000);
+                    } else if (data.message.toLowerCase().includes('fel')) {
+                        versionToastEl.classList.add('error');
+                        setTimeout(() => versionToast.hide(), 2000);
+                    } else {
+                        versionToastEl.classList.add('success');
+                        setTimeout(() => versionToast.hide(), 2000);
+                    }
                 })
                 .catch(error => {
-                    toastBody.innerHTML = "Fel vid versionskontroll.";
+                    toastBody.innerHTML = "Fel vid versionskontroll. Försök igen.";
                     versionToastEl.classList.add('error');
                     setTimeout(() => versionToast.hide(), 2000);
                 });
