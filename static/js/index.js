@@ -6,8 +6,8 @@ const toastContainer = document.querySelector('.toast-container');
 
 function getStatus(item) {
     if (item.quantity < item.low_status) return 'low';
-    if (item.quantity < item.mid_status) return 'mid';
-    return 'high';
+    if (item.quantity >= item.high_status) return 'high';
+    return 'mid'; // Standard mellan low och high
 }
 
 function showStatusNotification(message, newStatus) {
@@ -50,7 +50,7 @@ function loadInventory() {
                         const oldStatus = getStatus(oldItem);
                         const newStatus = getStatus(newItem);
                         if (oldStatus !== newStatus) {
-                            const statusText = newStatus === 'low' ? 'låg' : newStatus === 'mid' ? 'mellan' : 'hög';
+                            const statusText = newStatus === 'low' ? 'låg' : newStatus === 'high' ? 'hög' : 'normal';
                             showStatusNotification(`${newItem.product_family} - ${newItem.spare_part} har nu ${statusText} status (${newItem.quantity} st).`, newStatus);
                         }
                     }

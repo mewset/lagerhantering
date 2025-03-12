@@ -23,8 +23,12 @@ function loadDashboard() {
                 container.innerHTML = `<h1 class="family-title">${family}</h1>`;
                 const sortedSpareParts = families[family].sort((a, b) => a.spare_part.localeCompare(b.spare_part));
                 sortedSpareParts.forEach(item => {
-                    const statusClass = item.quantity < item.low_status ? 'low' :
-                                       item.quantity < item.mid_status ? 'mid' : 'high';
+                    let statusClass = 'mid'; // Standard är gult
+                    if (item.quantity < item.low_status) {
+                        statusClass = 'low'; // Rött
+                    } else if (item.quantity >= item.high_status) {
+                        statusClass = 'high'; // Grönt
+                    }
                     container.innerHTML += `<div class="spare-part ${statusClass}">${item.spare_part}: ${item.quantity} st</div>`;
                 });
                 dashboardContent.appendChild(container);

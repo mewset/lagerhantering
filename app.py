@@ -10,19 +10,13 @@ import logging
 
 app = Flask(__name__)
 
-# Konfigurera loggning
-logging.basicConfig(
-    filename='app.log',
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
-# Initialisering av kataloger och databas
 logger.info("Server Startas...")
 logger.info("Läser in modul: Filhantering")
 if not os.path.exists(DATA_DIR):
@@ -56,13 +50,12 @@ def write_inventory(data):
 def backup_database():
     try:
         now = datetime.now()
-        if now.weekday() < 5:  # Mån-Fre
+        if now.weekday() < 5:
             timestamp = now.strftime("%Y-%m-%d-%H%M")
             backup_filename = f"inventory-{timestamp}.json"
             backup_path = os.path.join(BACKUP_DIR, backup_filename)
             shutil.copy(DATA_FILE, backup_path)
             logger.info(f"Skapade backup: {backup_filename}")
-
             backup_files = [f for f in os.listdir(BACKUP_DIR) if f.startswith("inventory-") and f.endswith(".json")]
             if len(backup_files) > 5:
                 backup_files.sort(key=lambda x: os.path.getctime(os.path.join(BACKUP_DIR, x)))
@@ -123,8 +116,7 @@ def add_item():
             return jsonify({"message": "Quantity updated"}), 200
     new_item["id"] = int(new_item.get("id", 0)) or max([item["id"] for item in inventory] + [0]) + 1
     new_item["low_status"] = new_item.get("low_status", 5)
-    new_item["mid_status"] = new_item.get("mid_status", 10)
-    new_item["high_status"] = new_item.get("high_status", 15)
+    new_item["high_status"] = new_item.get("high_status", 15)  # Tagit bort mid_status
     inventory.append(new_item)
     write_inventory(inventory)
     logger.info(f"Lade till ny post: {new_item['quantity']} {new_item['spare_part']} till {new_item['product_family']}")
@@ -159,10 +151,8 @@ def update_item(item_id):
                 item["quantity"] = int(updates["quantity"])
             if "low_status" in updates:
                 item["low_status"] = int(updates["low_status"])
-            if "mid_status" in updates:
-                item["mid_status"] = int(updates["mid_status"])
             if "high_status" in updates:
-                item["high_status"] = int(updates["high_status"])
+                item["high_status"] = int(updates["high_status"]) 
             if item["quantity"] <= 0:
                 inventory.remove(item)
                 logger.info(f"Tog bort {item['spare_part']} från {item['product_family']} (antal blev <= 0 efter uppdatering)")
