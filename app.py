@@ -9,7 +9,7 @@ import threading
 import shutil
 import logging
 import subprocess
-import psutil  # Ny import för att hantera processer
+import psutil  # För att hantera processer
 
 app = Flask(__name__)
 
@@ -26,17 +26,16 @@ DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
-# Funktion för att avsluta processer som använder en specifik port
+# Uppdaterad funktion för att avsluta processer som använder en specifik port
 def kill_processes_using_port(port):
-    for proc in psutil.process_iter(['pid', 'name']):
-        try:
-            connections = proc.connections()
-            for conn in connections:
-                if conn.laddr.port == port:
-                    proc.terminate()
-                    logger.info(f"Avslutade process {proc.pid} som använde port {port}")
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass  # Ignorera processer vi inte kan komma åt eller som redan är borta
+    for conn in psutil.net_connections():
+        if conn.laddr.port == port and conn.pid:
+            try:
+                proc = psutil.Process(conn.pid)
+                proc.terminate()
+                logger.info(f"Avslutade process {proc.pid} som använde port {port}")
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass  # Ignorera processer vi inte kan komma åt eller som redan är borta
 
 def check_git_version(manual=False):
     """Kontrollera om lokal version matchar GitHub och hantera uppdatering."""
@@ -244,13 +243,11 @@ def check_version():
             pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if pull_result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
-                # Skicka svaret först
                 response = Response(
                     json.dumps({"update_needed": True, "message": "Ny version hittades. Servern startas om för att uppdatera."}),
                     status=200,
                     mimetype='application/json'
                 )
-                # Starta ny process och avsluta gammal i en separat tråd
                 def restart_server():
                     time.sleep(1)  # Vänta för att svaret ska nå klienten
                     kill_processes_using_port(5000)  # Avsluta processer på port 5000
