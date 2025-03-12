@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import json
 import os
 import sys
@@ -50,7 +50,7 @@ def check_git_version(manual=False):
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
                 logger.info("Startar om applikationen via batch-skript...")
                 subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
-                sys.exit(0)  # Avsluta nuvarande process omedelbart
+                sys.exit(0)
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + result.stderr)
                 return False if not manual else {"update_needed": False, "message": "Uppdatering misslyckades."}
@@ -229,8 +229,19 @@ def check_version():
             pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
             if pull_result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
-                subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
-                sys.exit(0)  # Avsluta nuvarande process direkt
+                # Skicka svaret först innan omstart
+                response = Response(
+                    json.dumps({"update_needed": True, "message": "Ny version hittades. Servern startas om för att uppdatera."}),
+                    status=200,
+                    mimetype='application/json'
+                )
+                # Starta om efter att svaret skickats
+                def restart_server():
+                    time.sleep(1)  # Vänta 1 sekund för att säkerställa att svaret når klienten
+                    subprocess.Popen(["cmd.exe", "/c", "start", "restart.bat"], cwd=os.getcwd())
+                    sys.exit(0)
+                threading.Thread(target=restart_server, daemon=True).start()
+                return response
             else:
                 logger.error("Misslyckades med att uppdatera:\n" + pull_result.stderr)
                 result = {"update_needed": False, "message": "Uppdatering misslyckades."}
