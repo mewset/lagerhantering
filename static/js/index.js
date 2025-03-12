@@ -23,7 +23,7 @@ function updateTable() {
             <td>${item.spare_part}</td>
             <td>${item.quantity}</td>
             <td>
-                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})">Ta bort</button>
+                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})">Ta Reservdel</button>
                 <button class="btn btn-danger btn-sm" onclick="showDeleteToast(${item.id})">Radera</button>
             </td>
         </tr>`;
