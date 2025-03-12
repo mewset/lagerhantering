@@ -1,21 +1,71 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import os
+import sys
 from datetime import datetime
 import schedule
 import time
 import threading
 import shutil
 import logging
+import subprocess
 
 app = Flask(__name__)
 
-logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+# Konfigurera loggning med detaljerad output
+logging.basicConfig(
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
+
+def check_git_version():
+    """Kontrollera om lokal version matchar GitHub och uppdatera vid behov."""
+    try:
+        logger.info("Startar versionsvalidering mot GitHub...")
+        
+        # Hämta lokal commit-hash
+        local_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        logger.info(f"Lokal commit-hash: {local_commit}")
+        
+        # Hämta remote commit-hash från GitHub
+        subprocess.run(["git", "fetch", "origin"], check=True)
+        remote_commit = subprocess.check_output(["git", "rev-parse", "origin/main"], text=True).strip()
+        logger.info(f"Remote commit-hash (GitHub): {remote_commit}")
+        
+        if local_commit != remote_commit:
+            logger.warning("Lokala och remote versioner skiljer sig. Uppdatering krävs.")
+            # Kontrollera om det finns lokala ändringar som kan orsaka konflikter
+            status = subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()
+            if status:
+                logger.error("Lokala ändringar detekterade. Kan inte uppdatera automatiskt utan att riskera konflikter.")
+                logger.info("Status för lokala ändringar:\n" + status)
+                return False
+            # Kör git pull för att uppdatera
+            logger.info("Kör 'git pull origin main' för att hämta senaste versionen...")
+            result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
+            if result.returncode == 0:
+                logger.info("Uppdatering lyckades:\n" + result.stdout)
+                # Starta om applikationen efter uppdatering
+                logger.info("Startar om applikationen för att använda den nya versionen...")
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            else:
+                logger.error("Misslyckades med att uppdatera från GitHub:\n" + result.stderr)
+                return False
+        else:
+            logger.info("Lokala och remote versioner är identiska. Ingen uppdatering behövs.")
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Fel vid Git-kommando: {e.output}")
+        return False
+    except Exception as e:
+        logger.error(f"Oväntat fel vid versionsvalidering: {e}")
+        return False
 
 logger.info("Server Startas...")
 logger.info("Läser in modul: Filhantering")
@@ -104,8 +154,6 @@ def logs():
 def get_inventory():
     return jsonify(read_inventory())
 
-
-
 @app.route("/api/inventory", methods=["POST"])
 def add_item():
     inventory = read_inventory()
@@ -132,7 +180,7 @@ def subtract_item(item_id):
     for item in inventory:
         if item["id"] == item_id:
             old_quantity = item["quantity"]
-            item["quantity"] = max(0, item["quantity"] - quantity_to_subtract)  # Behåll posten, sätt till 0 om negativt
+            item["quantity"] = max(0, item["quantity"] - quantity_to_subtract)
             write_inventory(inventory)
             logger.info(f"Subtraherade {quantity_to_subtract} {item['spare_part']} från {item['product_family']} (tidigare: {old_quantity}, nu: {item['quantity']})")
             return jsonify({"message": "Quantity subtracted"}), 200
@@ -147,7 +195,7 @@ def update_item(item_id):
         if item["id"] == item_id:
             old_quantity = item["quantity"]
             if "quantity" in updates:
-                item["quantity"] = max(0, int(updates["quantity"]))  # Behåll posten, sätt till 0 om negativt
+                item["quantity"] = max(0, int(updates["quantity"]))
             if "low_status" in updates:
                 item["low_status"] = int(updates["low_status"])
             if "high_status" in updates:
@@ -172,8 +220,12 @@ def delete_item(item_id):
     return jsonify({"message": "Item not found"}), 404
 
 if __name__ == "__main__":
-    import sys
     debug = '--debug' in sys.argv
+    
+    # Kör versionsvalidering vid uppstart
+    if not check_git_version():
+        logger.error("Versionsvalidering misslyckades. Startar ändå med lokal version.")
+    
     logger.info("Läser in modul: Schemaläggning")
     start_scheduler()
     logger.info("Servern är redo!")
