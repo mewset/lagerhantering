@@ -87,6 +87,7 @@ def admin():
 
 @app.route("/dashboard")
 def dashboard():
+    logger.info("Renderar dashboard.html")
     return render_template("dashboard.html", current_date=datetime.now().strftime("%Y-%m-%d"))
 
 @app.route("/logs")
@@ -102,6 +103,8 @@ def logs():
 @app.route("/api/inventory", methods=["GET"])
 def get_inventory():
     return jsonify(read_inventory())
+
+
 
 @app.route("/api/inventory", methods=["POST"])
 def add_item():
