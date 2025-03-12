@@ -30,7 +30,7 @@ def check_git_version(manual=False):
         remote_commit = subprocess.check_output(["git", "rev-parse", "origin/main"], text=True).strip()
         logger.info(f"Remote commit-hash (GitHub): {remote_commit}")
         
-        if local-consuming != remote_commit:
+        if local_commit != remote_commit:  # Fixat skrivfel här
             logger.warning("Lokala och remote versioner skiljer sig.")
             if manual:
                 logger.info("Manuell kontroll hittade ny version. Förbereder omstart för uppdatering.")
@@ -55,7 +55,7 @@ def check_git_version(manual=False):
         logger.error(f"Fel vid Git-kommando: {e.output}")
         return False if not manual else {"update_needed": False, "message": "Fel vid versionskontroll."}
     except Exception as e:
-        logger.error(f"Oväntat fel vid versionsvalidering: {e}")
+        logger.error(f"Oväntat fel vid versionsvalidering: {str(e)}")
         return False if not manual else {"update_needed": False, "message": "Ett oväntat fel inträffade."}
 
 logger.info("Server Startas...")
