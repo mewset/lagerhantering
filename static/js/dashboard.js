@@ -10,10 +10,12 @@ function loadDashboard() {
 
             const families = {};
             inventoryData.forEach(item => {
-                if (!families[item.product_family]) {
-                    families[item.product_family] = [];
+                if (item.quantity > 0) {  // Visa bara om quantity > 0
+                    if (!families[item.product_family]) {
+                        families[item.product_family] = [];
+                    }
+                    families[item.product_family].push(item);
                 }
-                families[item.product_family].push(item);
             });
 
             const sortedFamilies = Object.keys(families).sort();

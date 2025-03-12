@@ -116,7 +116,7 @@ def add_item():
             return jsonify({"message": "Quantity updated"}), 200
     new_item["id"] = int(new_item.get("id", 0)) or max([item["id"] for item in inventory] + [0]) + 1
     new_item["low_status"] = new_item.get("low_status", 5)
-    new_item["high_status"] = new_item.get("high_status", 15)  # Tagit bort mid_status
+    new_item["high_status"] = new_item.get("high_status", 15)
     inventory.append(new_item)
     write_inventory(inventory)
     logger.info(f"Lade till ny post: {new_item['quantity']} {new_item['spare_part']} till {new_item['product_family']}")
@@ -129,13 +129,9 @@ def subtract_item(item_id):
     for item in inventory:
         if item["id"] == item_id:
             old_quantity = item["quantity"]
-            item["quantity"] -= quantity_to_subtract
-            if item["quantity"] <= 0:
-                inventory.remove(item)
-                logger.info(f"Tog bort {item['spare_part']} från {item['product_family']} (antal blev <= 0)")
-            else:
-                logger.info(f"Subtraherade {quantity_to_subtract} {item['spare_part']} från {item['product_family']} (tidigare: {old_quantity}, nu: {item['quantity']})")
+            item["quantity"] = max(0, item["quantity"] - quantity_to_subtract)  # Behåll posten, sätt till 0 om negativt
             write_inventory(inventory)
+            logger.info(f"Subtraherade {quantity_to_subtract} {item['spare_part']} från {item['product_family']} (tidigare: {old_quantity}, nu: {item['quantity']})")
             return jsonify({"message": "Quantity subtracted"}), 200
     logger.warning(f"Försökte subtrahera från ID {item_id} som inte finns")
     return jsonify({"message": "Item not found"}), 404
@@ -148,17 +144,13 @@ def update_item(item_id):
         if item["id"] == item_id:
             old_quantity = item["quantity"]
             if "quantity" in updates:
-                item["quantity"] = int(updates["quantity"])
+                item["quantity"] = max(0, int(updates["quantity"]))  # Behåll posten, sätt till 0 om negativt
             if "low_status" in updates:
                 item["low_status"] = int(updates["low_status"])
             if "high_status" in updates:
-                item["high_status"] = int(updates["high_status"]) 
-            if item["quantity"] <= 0:
-                inventory.remove(item)
-                logger.info(f"Tog bort {item['spare_part']} från {item['product_family']} (antal blev <= 0 efter uppdatering)")
-            else:
-                logger.info(f"Uppdaterade {item['spare_part']} i {item['product_family']} (antal ändrat från {old_quantity} till {item['quantity']})")
+                item["high_status"] = int(updates["high_status"])
             write_inventory(inventory)
+            logger.info(f"Uppdaterade {item['spare_part']} i {item['product_family']} (antal ändrat från {old_quantity} till {item['quantity']})")
             return jsonify({"message": "Item updated"}), 200
     logger.warning(f"Försökte uppdatera ID {item_id} som inte finns")
     return jsonify({"message": "Item not found"}), 404
