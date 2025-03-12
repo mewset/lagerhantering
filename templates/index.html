@@ -13,7 +13,7 @@
             margin-bottom: 2rem;
         }
         .version-btn {
-            margin: 0 1rem; /* Passande marginal runt knappen */
+            margin: 0 1rem;
         }
         .toast-container {
             position: fixed;
@@ -21,19 +21,19 @@
             right: 20px;
             z-index: 1050;
         }
-        #versionToast {
+        #versionToast, #deleteToast {
             background-color: #ffffff;
             color: #212529;
             border: 1px solid #ced4da;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             min-width: 300px;
         }
-        #versionToast .toast-header {
+        #versionToast .toast-header, #deleteToast .toast-header {
             background-color: #f8f9fa;
             color: #212529;
             border-bottom: 1px solid #dee2e6;
         }
-        #versionToast .toast-body {
+        #versionToast .toast-body, #deleteToast .toast-body {
             background-color: #ffffff;
         }
     </style>
@@ -66,6 +66,7 @@
                 <input type="number" class="form-control" id="quantity" value="1" min="1" required>
             </div>
             <button type="submit" class="btn btn-primary">Lägg till</button>
+            <button type="button" class="btn btn-warning" onclick="subtractFromForm()">Ta reservdel</button>
         </form>
 
         <table class="table table-striped">
@@ -89,6 +90,19 @@
                 </div>
                 <div class="toast-body" id="versionToastBody"></div>
             </div>
+            <div id="deleteToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Bekräfta radering</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Är du säker på att du vill radera denna post?
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">Ja</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Nej</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -109,9 +123,9 @@
                     setTimeout(() => {
                         toastBody.innerHTML = data.message;
                         if (!data.update_needed) {
-                            setTimeout(() => versionToast.hide(), 2000); // Stäng toast efter 2 sekunder om ingen uppdatering
+                            setTimeout(() => versionToast.hide(), 2000);
                         }
-                    }, 1000); // Vänta 1 sekund för att visa "Kontrollerar version..."
+                    }, 1000);
                 })
                 .catch(error => {
                     toastBody.innerHTML = "Fel vid versionskontroll.";
@@ -122,8 +136,6 @@
         function openDashboard() {
             window.location.href = '/dashboard';
         }
-
-        
     </script>
 </body>
 </html>
