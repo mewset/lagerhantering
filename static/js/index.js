@@ -34,8 +34,8 @@ function updateTable(filter = '') {
             <td>${item.spare_part}</td>
             <td>${item.quantity}</td>
             <td>
-                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})">Ta reservdel</button>
-                <button class="btn btn-danger btn-sm" onclick="showDeleteToast(${item.id})">Radera</button>
+                <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})"><i class="bi bi-dash"></i>Ta reservdel</button>
+                <!-- <button class="btn btn-danger btn-sm" onclick="showDeleteToast(${item.id})">Radera</button> -->
             </td>
         </tr>`;
         tableBody.innerHTML += row;
