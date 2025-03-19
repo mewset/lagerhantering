@@ -72,7 +72,6 @@ function renderBrandSection(sectionId, brandData) {
                 spareDiv.className = `spare-part ${status}`;
                 spareDiv.innerHTML = `
                     <strong>${item.spare_part}</strong>: ${item.quantity} 
-                    (Low: ${item.low_status}, High: ${item.high_status})
                 `;
                 familyDiv.appendChild(spareDiv);
             });
