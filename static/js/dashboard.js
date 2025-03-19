@@ -1,76 +1,62 @@
-let inventoryData = [];
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+});
 
 function loadDashboard() {
     fetch('/api/inventory')
         .then(response => response.json())
         .then(data => {
-            inventoryData = data;
+            const dashboard = document.getElementById('dashboard');
+            dashboard.innerHTML = '';
 
-            // Hämta unika varumärken och sortera alfabetiskt
-            const brands = [...new Set(inventoryData.map(item => item.Brand))].sort();
-            if (brands.length > 2) {
-                console.warn('Fler än 2 kunder hittades, endast de första två visas.');
-            }
+            // Gruppera data per produktfamilj
+            const families = {};
+            data.forEach(item => {
+                if (!families[item.product_family]) {
+                    families[item.product_family] = [];
+                }
+                families[item.product_family].push(item);
+            });
 
-            // Dela upp data per varumärke
-            const brand1Data = inventoryData.filter(item => item.Brand === brands[0]);
-            const brand2Data = brands[1] ? inventoryData.filter(item => item.Brand === brands[1]) : [];
+            // Skapa grupper om upp till 3 familjer
+            const familyKeys = Object.keys(families);
+            for (let i = 0; i < familyKeys.length; i += 3) {
+                const rowGroup = familyKeys.slice(i, i + 3);
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row mb-3';
 
-            // Hantera första varumärket (vänster kolumn)
-            const brand1Column = document.getElementById('brand1');
-            brand1Column.innerHTML = `<h1 class="brand-title">${brands[0]}</h1>`;
-            renderBrandData(brand1Column, brand1Data);
+                rowGroup.forEach(family => {
+                    const items = families[family];
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'col-md-4';
 
-            // Hantera andra varumärket (höger kolumn)
-            const brand2Column = document.getElementById('brand2');
-            brand2Column.innerHTML = brands[1] ? `<h1 class="brand-title">${brands[1]}</h1>` : '<p class="text-center">Inget andra kunder tillgängligt</p>';
-            if (brands[1]) {
-                renderBrandData(brand2Column, brand2Data);
+                    const familyDiv = document.createElement('div');
+                    familyDiv.className = 'family-card';
+
+                    const title = document.createElement('h3');
+                    title.textContent = family;
+                    familyDiv.appendChild(title);
+
+                    items.forEach(item => {
+                        const status = item.quantity <= item.low_status ? 'low' :
+                                       item.quantity >= item.high_status ? 'high' : 'mid';
+                        const spareDiv = document.createElement('div');
+                        spareDiv.className = `spare-part ${status}`;
+                        spareDiv.innerHTML = `
+                            <strong>${item.spare_part}</strong>: ${item.quantity} 
+                        `;
+                        familyDiv.appendChild(spareDiv);
+                    });
+
+                    colDiv.appendChild(familyDiv);
+                    rowDiv.appendChild(colDiv);
+                });
+
+                dashboard.appendChild(rowDiv);
             }
         })
         .catch(error => {
             console.error('Fel vid laddning av dashboard:', error);
-            const dashboardContent = document.getElementById('dashboardContent');
-            dashboardContent.innerHTML = '<p class="text-center" style="font-size: 2rem;">Fel vid laddning av data.</p>';
+            document.getElementById('dashboard').innerHTML = '<p class="text-danger">Kunde inte ladda dashboard.</p>';
         });
 }
-
-function renderBrandData(container, data) {
-    const families = {};
-    data.forEach(item => {
-        if (item.quantity > 0) { // Visa bara om quantity > 0
-            if (!families[item.product_family]) {
-                families[item.product_family] = [];
-            }
-            families[item.product_family].push(item);
-        }
-    });
-
-    const sortedFamilies = Object.keys(families).sort();
-    sortedFamilies.forEach(family => {
-        const familyContainer = document.createElement('div');
-        familyContainer.className = 'family-container';
-        familyContainer.innerHTML = `<h1 class="family-title">${family}</h1>`;
-        const sortedSpareParts = families[family].sort((a, b) => a.spare_part.localeCompare(b.spare_part));
-        sortedSpareParts.forEach(item => {
-            let statusClass = 'mid'; // Standard är gult
-            if (item.quantity < item.low_status) {
-                statusClass = 'low'; // Rött
-            } else if (item.quantity >= item.high_status) {
-                statusClass = 'high'; // Grönt
-            }
-            familyContainer.innerHTML += `<div class="spare-part ${statusClass}">${item.spare_part}: ${item.quantity} st</div>`;
-        });
-        container.appendChild(familyContainer);
-    });
-
-    if (sortedFamilies.length === 0) {
-        container.innerHTML += '<p class="text-center">Inga lagerdata för denna kund.</p>';
-    }
-}
-
-window.onload = function() {
-    loadDashboard();
-    setInterval(loadDashboard, 5000);
-    window.addEventListener('resize', loadDashboard);
-};

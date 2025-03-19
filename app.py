@@ -26,7 +26,7 @@ DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
-# Hjälpfunktion för att bestämma status och åtgärd (din ändring)
+# Hjälpfunktion för att bestämma status och åtgärd (din version)
 def get_status_and_action(item):
     if item["quantity"] <= item["low_status"]:
         return "low", "Slakta enheter för att addera saldo"
@@ -164,11 +164,15 @@ def dashboard():
 @app.route("/logs")
 def logs():
     try:
-        with open('app.log', 'r') as f:
+        with open('app.log', 'r', encoding='utf-8') as f:
             log_lines = f.readlines()
+        if request.args.get('format') == 'json':
+            return jsonify({"logs": log_lines})
         return render_template("logs.html", logs=log_lines, current_date=datetime.now().strftime("%Y-%m-%d"))
     except Exception as e:
         logger.error(f"Fel vid läsning av loggar: {e}")
+        if request.args.get('format') == 'json':
+            return jsonify({"logs": [], "error": str(e)}), 500
         return render_template("logs.html", logs=[], current_date=datetime.now().strftime("%Y-%m-%d"))
 
 @app.route("/api/inventory", methods=["GET"])
