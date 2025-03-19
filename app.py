@@ -9,7 +9,7 @@ import threading
 import shutil
 import logging
 import subprocess
-import psutil  # För att hantera processer
+import psutil
 
 app = Flask(__name__)
 
@@ -26,7 +26,15 @@ DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
-# Uppdaterad funktion för att avsluta processer som använder en specifik port
+# Hjälpfunktion för att bestämma status och åtgärd (din ändring)
+def get_status_and_action(item):
+    if item["quantity"] <= item["low_status"]:
+        return "low", "Slakta enheter för att addera saldo"
+    elif item["quantity"] >= item["high_status"]:
+        return "high", "Ingen"
+    else:
+        return "mid", "Se över saldot"
+
 def kill_processes_using_port(port):
     for conn in psutil.net_connections():
         if conn.laddr.port == port and conn.pid:
@@ -35,10 +43,9 @@ def kill_processes_using_port(port):
                 proc.terminate()
                 logger.info(f"Avslutade process {proc.pid} som använde port {port}")
             except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass  # Ignorera processer vi inte kan komma åt eller som redan är borta
+                pass
 
 def check_git_version(manual=False):
-    """Kontrollera om lokal version matchar GitHub och hantera uppdatering."""
     try:
         logger.info("Startar versionsvalidering mot GitHub...")
         local_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
@@ -62,7 +69,7 @@ def check_git_version(manual=False):
             if result.returncode == 0:
                 logger.info("Uppdatering lyckades:\n" + result.stdout)
                 logger.info("Startar om applikationen...")
-                kill_processes_using_port(5000)  # Avsluta processer på port 5000
+                kill_processes_using_port(5000)
                 subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
                 sys.exit(0)
             else:
@@ -166,7 +173,11 @@ def logs():
 
 @app.route("/api/inventory", methods=["GET"])
 def get_inventory():
-    return jsonify(read_inventory())
+    inventory = read_inventory()
+    for item in inventory:
+        status, action = get_status_and_action(item)
+        logger.info(f"Inventory status: ID={item['id']}, Brand={item.get('Brand', 'N/A')}, ProductFamily={item['product_family']}, SparePart={item['spare_part']}, Quantity={item['quantity']}, Status={status}, Action={action}")
+    return jsonify(inventory)
 
 @app.route("/api/inventory", methods=["POST"])
 def add_item():
@@ -177,14 +188,16 @@ def add_item():
             old_quantity = item["quantity"]
             item["quantity"] += int(new_item["quantity"])
             write_inventory(inventory)
-            logger.info(f"Lade till {new_item['quantity']} {new_item['spare_part']} till {new_item['product_family']} (tidigare: {old_quantity}, nu: {item['quantity']})")
+            status, action = get_status_and_action(item)
+            logger.info(f"Updated quantity: ID={item['id']}, Brand={item.get('Brand', 'N/A')}, ProductFamily={item['product_family']}, SparePart={item['spare_part']}, OldQuantity={old_quantity}, NewQuantity={item['quantity']}, Status={status}, Action={action}")
             return jsonify({"message": "Quantity updated"}), 200
     new_item["id"] = int(new_item.get("id", 0)) or max([item["id"] for item in inventory] + [0]) + 1
     new_item["low_status"] = new_item.get("low_status", 5)
     new_item["high_status"] = new_item.get("high_status", 15)
     inventory.append(new_item)
     write_inventory(inventory)
-    logger.info(f"Lade till ny post: {new_item['quantity']} {new_item['spare_part']} till {new_item['product_family']}")
+    status, action = get_status_and_action(new_item)
+    logger.info(f"Added item: ID={new_item['id']}, Brand={new_item.get('Brand', 'N/A')}, ProductFamily={new_item['product_family']}, SparePart={new_item['spare_part']}, Quantity={new_item['quantity']}, Status={status}, Action={action}")
     return jsonify({"message": "Item added"}), 201
 
 @app.route("/api/inventory/<int:item_id>/subtract", methods=["POST"])
@@ -196,7 +209,8 @@ def subtract_item(item_id):
             old_quantity = item["quantity"]
             item["quantity"] = max(0, item["quantity"] - quantity_to_subtract)
             write_inventory(inventory)
-            logger.info(f"Subtraherade {quantity_to_subtract} {item['spare_part']} från {item['product_family']} (tidigare: {old_quantity}, nu: {item['quantity']})")
+            status, action = get_status_and_action(item)
+            logger.info(f"Subtracted quantity: ID={item['id']}, Brand={item.get('Brand', 'N/A')}, ProductFamily={item['product_family']}, SparePart={item['spare_part']}, OldQuantity={old_quantity}, NewQuantity={item['quantity']}, Status={status}, Action={action}")
             return jsonify({"message": "Quantity subtracted"}), 200
     logger.warning(f"Försökte subtrahera från ID {item_id} som inte finns")
     return jsonify({"message": "Item not found"}), 404
@@ -207,16 +221,7 @@ def update_item(item_id):
     updates = request.json
     for item in inventory:
         if item["id"] == item_id:
-            # Spara gamla värden för loggning
-            old_values = {
-                "Brand": item.get("Brand"),
-                "product_family": item.get("product_family"),
-                "spare_part": item.get("spare_part"),
-                "quantity": item.get("quantity"),
-                "low_status": item.get("low_status"),
-                "high_status": item.get("high_status")
-            }
-            # Uppdatera fält om de finns i requesten
+            old_values = item.copy()
             if "Brand" in updates:
                 item["Brand"] = updates["Brand"]
             if "product_family" in updates:
@@ -230,9 +235,9 @@ def update_item(item_id):
             if "high_status" in updates:
                 item["high_status"] = int(updates["high_status"])
             write_inventory(inventory)
-            # Logga ändringar
-            changes = {k: v for k, v in updates.items() if old_values[k] != item[k]}
-            logger.info(f"Uppdaterade ID {item_id}: {changes}")
+            status, action = get_status_and_action(item)
+            changes = {k: f"Old={old_values[k]}, New={item[k]}" for k in updates.keys()}
+            logger.info(f"Updated item: ID={item_id}, Brand={item.get('Brand', 'N/A')}, ProductFamily={item['product_family']}, SparePart={item['spare_part']}, Changes={changes}, Status={status}, Action={action}")
             return jsonify({"message": "Item updated"}), 200
     logger.warning(f"Försökte uppdatera ID {item_id} som inte finns")
     return jsonify({"message": "Item not found"}), 404
@@ -240,11 +245,11 @@ def update_item(item_id):
 @app.route("/api/inventory/<int:item_id>", methods=["DELETE"])
 def delete_item(item_id):
     inventory = read_inventory()
-    original_len = len(inventory)
     for item in inventory:
         if item["id"] == item_id:
+            status, action = get_status_and_action(item)
+            logger.info(f"Deleted item: ID={item_id}, Brand={item.get('Brand', 'N/A')}, ProductFamily={item['product_family']}, SparePart={item['spare_part']}, Quantity={item['quantity']}, Status={status}, Action={action}")
             inventory.remove(item)
-            logger.info(f"Raderade {item['spare_part']} från {item['product_family']} (ID: {item_id})")
             write_inventory(inventory)
             return jsonify({"message": "Item deleted"}), 200
     logger.warning(f"Försökte radera ID {item_id} som inte finns")
@@ -252,7 +257,6 @@ def delete_item(item_id):
 
 @app.route("/api/check_version", methods=["GET"])
 def check_version():
-    """API-endpoint för manuell versionskontroll."""
     result = check_git_version(manual=True)
     if result["update_needed"]:
         logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
@@ -266,8 +270,8 @@ def check_version():
                     mimetype='application/json'
                 )
                 def restart_server():
-                    time.sleep(1)  # Vänta för att svaret ska nå klienten
-                    kill_processes_using_port(5000)  # Avsluta processer på port 5000
+                    time.sleep(1)
+                    kill_processes_using_port(5000)
                     subprocess.Popen(['cmd.exe', '/k', sys.executable, 'app.py'], cwd=os.getcwd())
                     sys.exit(0)
                 threading.Thread(target=restart_server, daemon=True).start()
