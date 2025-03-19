@@ -104,8 +104,68 @@ function updateSparePartDropdown() {
     }
 }
 
-// Resten av funktionerna (subtractItem, subtractFromForm, showDeleteToast, confirmDelete, etc.) förblir oförändrade
-// ...
+// Minska antalet för en reservdel från formuläret
+function subtractFromForm() {
+    const productFamily = document.getElementById('product_family').value;
+    const sparePart = document.getElementById('spare_part').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+
+    // Hitta reservdelen i inventariet
+    const item = inventoryData.find(i => i.product_family === productFamily && i.spare_part === sparePart);
+    if (item) {
+        fetch(`/api/inventory/${item.id}/subtract`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity }) // Minska med angivet antal
+        }).then(() => loadInventory()); // Ladda om inventariet efter ändring
+    } else {
+        alert("Reservdelen finns inte i lagret!"); // Visa felmeddelande om reservdelen inte hittas
+    }
+}
+
+// Visa en toast för att bekräfta radering
+function showDeleteToast(id) {
+    deleteId = id; // Spara ID för radering
+    deleteToast.show(); // Visa toasten
+}
+
+// Bekräfta radering av en post
+function confirmDelete() {
+    if (deleteId) {
+        fetch(`/api/inventory/${deleteId}`, { method: 'DELETE' })
+            .then(() => {
+                deleteId = null; // Återställ deleteId
+                deleteToast.hide(); // Dölj toasten
+                loadInventory(); // Ladda om inventariet
+            });
+    }
+}
+
+// Hantera formulär för att lägga till en ny post
+document.getElementById('inventoryForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Förhindra standardformulärsubmit
+
+    // Hämta värden från formuläret
+    const product_family = document.getElementById('product_family').value;
+    const spare_part = document.getElementById('spare_part').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const id = Date.now(); // Skapa ett unikt ID baserat på tidstämpel
+
+    // Skicka en POST-förfrågan för att lägga till en ny post
+    fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, product_family, spare_part, quantity })
+    }).then(() => loadInventory()); // Ladda om inventariet efter tillägg
+});
+
+// Uppdatera reservdels-dropdownen när produktfamilj ändras
+document.getElementById('product_family').addEventListener('change', updateSparePartDropdown);
+
+// Uppdatera tabellen när sökfältet ändras
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    updateTable(e.target.value); // Uppdatera tabellen med filtrerad data
+});
 
 // Ladda inventariet när sidan laddas
 window.onload = loadInventory;
