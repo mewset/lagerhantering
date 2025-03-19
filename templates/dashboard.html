@@ -11,31 +11,42 @@
             font-family: Arial, sans-serif;
         }
         .container {
-            max-width: 1800px; /* Anpassad för 1920px skärm */
+            max-width: 1800px;
             padding: 0 15px;
         }
         #dashboardContent {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Fler kolumner */
-            gap: 1rem; /* Minskad från trolig 2rem */
+            grid-template-columns: 1fr 1fr; /* Två lika breda kolumner */
+            gap: 1rem;
+            height: calc(100vh - 100px); /* Anpassa höjd efter skärmen */
+            overflow-y: auto;
         }
-        .family-container {
-            padding: 0.5rem; /* Minskad padding */
+        .brand-column {
+            padding: 1rem;
             background-color: white;
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        h1.family-title {
-            font-size: 2rem; /* Minskad storlek */
+        .brand-title {
+            font-size: 2.5rem;
             color: #343a40;
-            margin-bottom: 0.5rem; /* Minskad marginal */
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .family-container {
+            margin-bottom: 1rem;
+        }
+        h1.family-title {
+            font-size: 2rem;
+            color: #343a40;
+            margin-bottom: 0.5rem;
         }
         .spare-part {
-            font-size: 1.2rem; /* Minskad storlek */
-            padding: 0.25rem 0.5rem; /* Minskad padding */
+            font-size: 1.2rem;
+            padding: 0.25rem 0.5rem;
             border-radius: 8px;
-            margin-bottom: 0.25rem; /* Minskad marginal */
-            display: inline-block;
+            margin-bottom: 0.25rem;
+            display: block;
             width: 100%;
         }
         .low { background-color: #f8d7da; } /* Rött */
@@ -45,8 +56,10 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center dashboard-header">Lagerstatus</h1>
-        <div id="dashboardContent"></div>
+        <div id="dashboardContent">
+            <div id="brand1" class="brand-column"></div>
+            <div id="brand2" class="brand-column"></div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>

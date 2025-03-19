@@ -64,6 +64,10 @@
 
         <form id="addForm" class="mb-4">
             <div class="mb-3">
+                <label for="brand" class="form-label">Kund</label>
+                <input type="text" class="form-control" id="brand" required>
+            </div>
+            <div class="mb-3">
                 <label for="product_family" class="form-label">Produktfamilj</label>
                 <input type="text" class="form-control" id="product_family" required>
             </div>
@@ -90,6 +94,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Kund</th>
                     <th>Produktfamilj</th>
                     <th>Reservdel</th>
                     <th>Antal</th>
@@ -135,8 +140,9 @@
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.id}</td>
-                            <td>${item.product_family}</td>
-                            <td>${item.spare_part}</td>
+                            <td><input type="text" class="form-control" value="${item.Brand}" onchange="updateItem(${item.id}, 'Brand', this.value)"></td>
+                            <td><input type="text" class="form-control" value="${item.product_family}" onchange="updateItem(${item.id}, 'product_family', this.value)"></td>
+                            <td><input type="text" class="form-control" value="${item.spare_part}" onchange="updateItem(${item.id}, 'spare_part', this.value)"></td>
                             <td><input type="number" class="form-control" value="${item.quantity}" min="0" onchange="updateItem(${item.id}, 'quantity', this.value)"></td>
                             <td><input type="number" class="form-control" value="${item.low_status}" min="1" onchange="updateItem(${item.id}, 'low_status', this.value)"></td>
                             <td><input type="number" class="form-control" value="${item.high_status}" min="1" onchange="updateItem(${item.id}, 'high_status', this.value)"></td>
@@ -149,6 +155,7 @@
 
         document.getElementById('addForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const brand = document.getElementById('brand').value;
             const product_family = document.getElementById('product_family').value;
             const spare_part = document.getElementById('spare_part').value;
             const quantity = parseInt(document.getElementById('quantity').value);
@@ -157,7 +164,7 @@
             fetch('/api/inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_family, spare_part, quantity, low_status, high_status })
+                body: JSON.stringify({ Brand: brand, product_family, spare_part, quantity, low_status, high_status })
             }).then(() => {
                 loadInventory();
                 this.reset();
