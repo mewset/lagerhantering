@@ -207,7 +207,22 @@ def update_item(item_id):
     updates = request.json
     for item in inventory:
         if item["id"] == item_id:
-            old_quantity = item["quantity"]
+            # Spara gamla värden för loggning
+            old_values = {
+                "Brand": item.get("Brand"),
+                "product_family": item.get("product_family"),
+                "spare_part": item.get("spare_part"),
+                "quantity": item.get("quantity"),
+                "low_status": item.get("low_status"),
+                "high_status": item.get("high_status")
+            }
+            # Uppdatera fält om de finns i requesten
+            if "Brand" in updates:
+                item["Brand"] = updates["Brand"]
+            if "product_family" in updates:
+                item["product_family"] = updates["product_family"]
+            if "spare_part" in updates:
+                item["spare_part"] = updates["spare_part"]
             if "quantity" in updates:
                 item["quantity"] = max(0, int(updates["quantity"]))
             if "low_status" in updates:
@@ -215,7 +230,9 @@ def update_item(item_id):
             if "high_status" in updates:
                 item["high_status"] = int(updates["high_status"])
             write_inventory(inventory)
-            logger.info(f"Uppdaterade {item['spare_part']} i {item['product_family']} (antal ändrat från {old_quantity} till {item['quantity']})")
+            # Logga ändringar
+            changes = {k: v for k, v in updates.items() if old_values[k] != item[k]}
+            logger.info(f"Uppdaterade ID {item_id}: {changes}")
             return jsonify({"message": "Item updated"}), 200
     logger.warning(f"Försökte uppdatera ID {item_id} som inte finns")
     return jsonify({"message": "Item not found"}), 404

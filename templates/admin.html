@@ -140,7 +140,7 @@
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.id}</td>
-                            <td><input type="text" class="form-control" value="${item.Brand}" onchange="updateItem(${item.id}, 'Brand', this.value)"></td>
+                            <td><input type="text" class="form-control" value="${item.Brand || ''}" onchange="updateItem(${item.id}, 'Brand', this.value)"></td>
                             <td><input type="text" class="form-control" value="${item.product_family}" onchange="updateItem(${item.id}, 'product_family', this.value)"></td>
                             <td><input type="text" class="form-control" value="${item.spare_part}" onchange="updateItem(${item.id}, 'spare_part', this.value)"></td>
                             <td><input type="number" class="form-control" value="${item.quantity}" min="0" onchange="updateItem(${item.id}, 'quantity', this.value)"></td>
@@ -175,7 +175,7 @@
             fetch(`/api/inventory/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ [field]: value })
+                body: JSON.stringify({ [field]: field === 'quantity' || field === 'low_status' || field === 'high_status' ? parseInt(value) : value })
             }).then(() => loadInventory());
         }
 
