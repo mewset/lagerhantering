@@ -9,7 +9,6 @@ function loadDashboard() {
             const dashboard = document.getElementById('dashboard');
             dashboard.innerHTML = '';
 
-            // Gruppera data per produktfamilj
             const families = {};
             data.forEach(item => {
                 if (!families[item.product_family]) {
@@ -18,7 +17,6 @@ function loadDashboard() {
                 families[item.product_family].push(item);
             });
 
-            // Skapa grupper om upp till 3 familjer
             const familyKeys = Object.keys(families);
             for (let i = 0; i < familyKeys.length; i += 3) {
                 const rowGroup = familyKeys.slice(i, i + 3);
