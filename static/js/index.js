@@ -2,6 +2,7 @@ let inventoryData = [];
 let deleteId = null;
 const deleteToast = new bootstrap.Toast(document.getElementById('deleteToast'));
 
+// Ladda inventariet när sidan laddas
 function loadInventory() {
     fetch('/api/inventory')
         .then(response => response.json())
@@ -9,16 +10,12 @@ function loadInventory() {
             inventoryData = data.sort((a, b) => a.product_family.localeCompare(b.product_family) || a.spare_part.localeCompare(b.spare_part));
             updateTable();
             updateProductFamilyDropdown();
+            updateBrandDropdown(); // Uppdatera kund-dropdownen
         })
         .catch(error => console.error('Fel vid laddning av inventarie:', error));
 }
 
-function getStatusClass(item) {
-    if (item.quantity <= item.low_status) return 'table-danger'; // Rött för lågt
-    if (item.quantity >= item.high_status) return 'table-success'; // Grönt för högt
-    return 'table-warning'; // Gult för normalt
-}
-
+// Uppdatera tabellen med filtrerad data
 function updateTable(filter = '') {
     const tableBody = document.getElementById('inventoryTable');
     tableBody.innerHTML = '';
@@ -35,13 +32,20 @@ function updateTable(filter = '') {
             <td>${item.quantity}</td>
             <td>
                 <button class="btn btn-warning btn-sm me-2" onclick="subtractItem(${item.id})"><i class="bi bi-dash"></i>Ta reservdel</button>
-                <!-- <button class="btn btn-danger btn-sm" onclick="showDeleteToast(${item.id})">Radera</button> -->
             </td>
         </tr>`;
         tableBody.innerHTML += row;
     });
 }
 
+// Hämta statusklass baserat på kvantitet
+function getStatusClass(item) {
+    if (item.quantity <= item.low_status) return 'table-danger'; // Rött för lågt
+    if (item.quantity >= item.high_status) return 'table-success'; // Grönt för högt
+    return 'table-warning'; // Gult för normalt
+}
+
+// Uppdatera produktfamilj-dropdownen
 function updateProductFamilyDropdown() {
     const productFamilySelect = document.getElementById('product_family');
     const uniqueFamilies = [...new Set(inventoryData.map(item => item.product_family))].sort();
@@ -49,9 +53,10 @@ function updateProductFamilyDropdown() {
     uniqueFamilies.forEach(family => {
         productFamilySelect.innerHTML += `<option value="${family}">${family}</option>`;
     });
-    updateSparePartDropdown();
+    updateSparePartDropdown(); // Uppdatera reservdels-dropdownen
 }
 
+// Uppdatera reservdels-dropdownen baserat på vald produktfamilj
 function updateSparePartDropdown() {
     const productFamily = document.getElementById('product_family').value;
     const sparePartSelect = document.getElementById('spare_part');
@@ -67,6 +72,19 @@ function updateSparePartDropdown() {
     }
 }
 
+// Uppdatera kund-dropdownen
+function updateBrandDropdown() {
+    const brandSelect = document.getElementById('brand');
+    const uniqueBrands = [...new Set(inventoryData.map(item => item.Brand))].sort();
+    brandSelect.innerHTML = '<option value="" disabled selected>Välj kund</option>';
+    uniqueBrands.forEach(brand => {
+        if (brand) { // Se till att brand inte är null eller undefined
+            brandSelect.innerHTML += `<option value="${brand}">${brand}</option>`;
+        }
+    });
+}
+
+// Ta bort en reservdel från lagret
 function subtractItem(id) {
     fetch(`/api/inventory/${id}/subtract`, {
         method: 'POST',
@@ -75,6 +93,7 @@ function subtractItem(id) {
     }).then(() => loadInventory());
 }
 
+// Ta bort en reservdel från formuläret
 function subtractFromForm() {
     const productFamily = document.getElementById('product_family').value;
     const sparePart = document.getElementById('spare_part').value;
@@ -91,11 +110,13 @@ function subtractFromForm() {
     }
 }
 
+// Visa en toast för att bekräfta radering
 function showDeleteToast(id) {
     deleteId = id;
     deleteToast.show();
 }
 
+// Bekräfta radering av en post
 function confirmDelete() {
     if (deleteId) {
         fetch(`/api/inventory/${deleteId}`, { method: 'DELETE' })
@@ -107,6 +128,7 @@ function confirmDelete() {
     }
 }
 
+// Hantera formulär för att lägga till en ny post
 document.getElementById('inventoryForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const product_family = document.getElementById('product_family').value;
@@ -120,10 +142,13 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
     }).then(() => loadInventory());
 });
 
+// Uppdatera reservdels-dropdownen när produktfamilj ändras
 document.getElementById('product_family').addEventListener('change', updateSparePartDropdown);
 
+// Uppdatera tabellen när sökfältet ändras
 document.getElementById('searchInput').addEventListener('input', function(e) {
     updateTable(e.target.value);
 });
 
+// Ladda inventariet när sidan laddas
 window.onload = loadInventory;
