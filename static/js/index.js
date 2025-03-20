@@ -104,6 +104,25 @@ function updateSparePartDropdown() {
     }
 }
 
+// Minska antalet för en reservdel
+function subtractItem(id) {
+    fetch(`/api/inventory/${id}/subtract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: 1 }) // Minska med 1
+    })
+    .then(response => {
+        if (response.ok) {
+            loadInventory(); // Ladda om inventariet efter ändring
+        } else {
+            console.error('Fel vid minskning av reservdel');
+        }
+    })
+    .catch(error => {
+        console.error('Fel vid minskning av reservdel:', error);
+    });
+}
+
 // Minska antalet för en reservdel från formuläret
 function subtractFromForm() {
     const productFamily = document.getElementById('product_family').value;
