@@ -26,7 +26,7 @@ DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
 BACKUP_DIR = "db_backup"
 
-# Hjälpfunktion för att bestämma status och åtgärd (din version)
+# Hjälpfunktion för att bestämma status och åtgärd
 def get_status_and_action(item):
     if item["quantity"] <= item["low_status"]:
         return "low", "Slakta enheter för att addera saldo"
