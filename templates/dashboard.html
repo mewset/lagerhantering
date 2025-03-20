@@ -9,9 +9,14 @@
         body {
             background-color: #f8f9fa;
             font-family: Arial, sans-serif;
+            margin: 0; /* Ta bort standardmarginalen */
+            padding: 0; /* Ta bort standardpaddingen */
         }
-        .container {
-            margin-top: 2rem;
+        .dashboard-container {
+            width: 100%; /* Full bredd */
+            max-width: 1080px; /* Maxbredd på 1080px */
+            margin: 0 auto; /* Centrera containern horisontellt */
+            padding: 20px; /* Lite marginal inuti containern */
         }
         .dashboard-section {
             display: flex;
@@ -42,7 +47,8 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard-container">
+        <a href="/" class="btn btn-secondary mb-3">Tillbaka till startsidan</a>
         <div class="dashboard-section">
             <!-- Vänster del: Första brand -->
             <div class="brand-section" id="brandLeft">
