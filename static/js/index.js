@@ -58,6 +58,12 @@ function updateBrandDropdown() {
     brandDropdown.addEventListener('change', () => {
         updateProductFamilyDropdown();
         updateSparePartDropdown();
+        
+        // Visuell feedback när kund väljs
+        brandDropdown.classList.add('is-valid');
+        
+        // Visa tom lagerstatus tills komplett val gjorts
+        updateStockStatusInForm();
     });
 }
 
@@ -85,6 +91,12 @@ function updateProductFamilyDropdown() {
     // Uppdatera reservdel när produktfamilj ändras
     productFamilyDropdown.addEventListener('change', () => {
         updateSparePartDropdown();
+        
+        // Visuell feedback när produktfamilj väljs
+        productFamilyDropdown.classList.add('is-valid');
+        
+        // Visa tom lagerstatus tills komplett val gjorts
+        updateStockStatusInForm();
     });
 }
 
@@ -108,6 +120,61 @@ function updateSparePartDropdown() {
         option.textContent = part;
         sparePartDropdown.appendChild(option);
     });
+    
+    // Lägg till händelseavlyssnare för att visa lagerstatus när reservdel väljs
+    sparePartDropdown.addEventListener('change', () => {
+        // Visuell feedback när reservdel väljs
+        sparePartDropdown.classList.add('is-valid');
+        
+        // Visa aktuell lagerstatus för vald artikel
+        updateStockStatusInForm();
+    });
+}
+
+// Ny funktion: Visa aktuell lagerstatus i formuläret
+function updateStockStatusInForm() {
+    const stockDisplay = document.getElementById('currentStock');
+    const brand = document.getElementById('brand').value;
+    const productFamily = document.getElementById('product_family').value;
+    const sparePart = document.getElementById('spare_part').value;
+    
+    // Endast visa lagerstatus om alla val är gjorda
+    if (brand && productFamily && sparePart) {
+        // Hitta artikeln i inventariedata
+        const selectedItem = inventoryData.find(item => 
+            item.Brand === brand && 
+            item.product_family === productFamily && 
+            item.spare_part === sparePart
+        );
+        
+        if (selectedItem) {
+            // Bestäm statusnivå och CSS-klass
+            let statusClass = '';
+            let statusText = '';
+            
+            if (selectedItem.quantity <= selectedItem.low_status) {
+                statusClass = 'stock-low';
+                statusText = 'Lågt lager';
+            } else if (selectedItem.quantity >= selectedItem.high_status) {
+                statusClass = 'stock-high';
+                statusText = 'Högt lager';
+            } else {
+                statusClass = 'stock-medium';
+                statusText = 'Medel lager';
+            }
+            
+            // Visa lagerstatus i formuläret
+            stockDisplay.innerHTML = `
+                <span class="stock-indicator ${statusClass}">
+                    <i class="bi bi-box"></i> ${selectedItem.quantity} st (${statusText})
+                </span>`;
+        } else {
+            stockDisplay.innerHTML = '<span class="text-muted">Ingen information tillgänglig</span>';
+        }
+    } else {
+        // Töm statusmeddelandet om inte alla val är gjorda
+        stockDisplay.innerHTML = '';
+    }
 }
 
 // Returnera en CSS-klass baserat på lagernivån
@@ -138,6 +205,31 @@ function subtractItem(id) {
     .catch(error => console.error('Fel vid minskning av reservdel:', error));
 }
 
+// Lägg till funktion för att ta reservdel från formuläret
+function subtractFromForm() {
+    const brand = document.getElementById('brand').value;
+    const product_family = document.getElementById('product_family').value;
+    const spare_part = document.getElementById('spare_part').value;
+    
+    if (!brand || !product_family || !spare_part) {
+        showToast('Välj kund, produktfamilj och reservdel först');
+        return;
+    }
+    
+    // Hitta artikel i lager
+    const item = inventoryData.find(item => 
+        item.Brand === brand && 
+        item.product_family === product_family && 
+        item.spare_part === spare_part
+    );
+    
+    if (item) {
+        subtractItem(item.id);
+    } else {
+        showToast('Kunde inte hitta artikeln i lager');
+    }
+}
+
 // Lägg till reservdel
 document.getElementById('inventoryForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -154,6 +246,9 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
     }).then(() => {
         loadInventory();
         showToast(`Lagt till: ${product_family} - ${spare_part} - ${quantity}`, 'success');
+        
+        // Uppdatera lagerstatus i formuläret
+        setTimeout(updateStockStatusInForm, 500);
     });
 });
 
@@ -161,7 +256,13 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
 function showToast(message, type = 'info') {
     const toastElement = document.getElementById('successToast');
     const toastBody = document.getElementById('toastMessage');
-    const toastIcon = document.getElementById('toastIcon');
+    const toastIcon = document.getElementById('toastIcon') || document.createElement('i');
+    
+    if (!document.getElementById('toastIcon')) {
+        toastIcon.id = 'toastIcon';
+        toastIcon.className = 'bi me-2';
+        toastBody.prepend(toastIcon);
+    }
 
     // Ta bort gamla färgklasser
     toastElement.classList.remove('bg-success', 'bg-danger', 'bg-warning');
@@ -179,6 +280,9 @@ function showToast(message, type = 'info') {
     }
 
     toastBody.textContent = message;
+    // Lägg tillbaka ikonen efter att vi satt textContent
+    toastBody.prepend(toastIcon);
+    
     const toast = new bootstrap.Toast(toastElement);
     toast.show();
 }
