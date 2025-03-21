@@ -152,10 +152,6 @@ def start_scheduler():
 def index():
     return render_template("index.html", current_date=datetime.now().strftime("%Y-%m-%d"))
 
-@app.route("/testindex")
-def testindex():
-    return render_template("testindex.html", current_date=datetime.now().strftime("%Y-%m-%d"))
-
 @app.route("/admin")
 def admin():
     return render_template("admin.html", current_date=datetime.now().strftime("%Y-%m-%d"))
