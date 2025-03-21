@@ -114,6 +114,12 @@ function subtractItem(id) {
     .then(response => {
         if (response.ok) {
             loadInventory(); // Ladda om inventariet efter ändring
+
+            // Hitta reservdelen i inventariet för att hämta produktfamilj och reservdel
+            const item = inventoryData.find(item => item.id === id);
+            if (item) {
+                showToast(`Tagit: ${item.product_family} - ${item.spare_part} - 1`); // Visa toast
+            }
         } else {
             console.error('Fel vid minskning av reservdel');
         }
@@ -136,7 +142,10 @@ function subtractFromForm() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ quantity }) // Minska med angivet antal
-        }).then(() => loadInventory()); // Ladda om inventariet efter ändring
+        }).then(() => {
+            loadInventory(); // Ladda om inventariet efter ändring
+            showToast(`Tagit: ${productFamily} - ${sparePart} - ${quantity}`); // Visa toast
+        });
     } else {
         alert("Reservdelen finns inte i lagret!"); // Visa felmeddelande om reservdelen inte hittas
     }
@@ -175,7 +184,10 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, product_family, spare_part, quantity })
-    }).then(() => loadInventory()); // Ladda om inventariet efter tillägg
+    }).then(() => {
+        loadInventory(); // Ladda om inventariet efter tillägg
+        showToast(`Lagt till: ${product_family} - ${spare_part} - ${quantity}`); // Visa toast
+    });
 });
 
 // Uppdatera reservdels-dropdownen när produktfamilj ändras
@@ -188,3 +200,10 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
 
 // Ladda inventariet när sidan laddas
 window.onload = loadInventory;
+
+// Visa toast-meddelande
+function showToast(message) {
+    const toast = new bootstrap.Toast(document.getElementById('successToast'));
+    document.getElementById('toastMessage').textContent = message; // Uppdatera meddelandet
+    toast.show(); // Visa toasten
+}
