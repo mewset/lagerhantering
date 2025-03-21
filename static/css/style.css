@@ -20,6 +20,19 @@ body {
     padding: 0 1rem;
 }
 
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1000;
+    padding: 1rem 0;
+}
+
 /* Rubriker */
 h1, h2, h3 {
     color: #343a40;
