@@ -9,7 +9,7 @@ function loadInventory() {
         .then(data => {
             inventoryData = data.sort((a, b) => a.product_family.localeCompare(b.product_family) || a.spare_part.localeCompare(b.spare_part));
             updateTable();
-            updateBrandDropdown();
+            updateBrandDropdown(); // Uppdatera dropdown för kunder
         })
         .catch(error => console.error('Fel vid laddning av inventarie:', error));
 }
@@ -34,6 +34,79 @@ function updateTable(filter = '') {
             </td>
         </tr>`;
         tableBody.innerHTML += row;
+    });
+}
+
+// Uppdatera dropdown för kunder
+function updateBrandDropdown() {
+    const brandDropdown = document.getElementById('brand');
+    if (!brandDropdown) return; // Om dropdown inte finns, avbryt
+
+    // Hämta unika kunder från inventariet
+    const brands = [...new Set(inventoryData.map(item => item.Brand || 'Okänd'))];
+    brandDropdown.innerHTML = '<option value="" disabled selected>Välj kund</option>';
+
+    // Lägg till varje kund i dropdown
+    brands.forEach(brand => {
+        const option = document.createElement('option');
+        option.value = brand;
+        option.textContent = brand;
+        brandDropdown.appendChild(option);
+    });
+
+    // Uppdatera produktfamilj och reservdel när kund ändras
+    brandDropdown.addEventListener('change', () => {
+        updateProductFamilyDropdown();
+        updateSparePartDropdown();
+    });
+}
+
+// Uppdatera dropdown för produktfamiljer baserat på vald kund
+function updateProductFamilyDropdown() {
+    const productFamilyDropdown = document.getElementById('product_family');
+    if (!productFamilyDropdown) return; // Om dropdown inte finns, avbryt
+
+    const selectedBrand = document.getElementById('brand').value;
+    const productFamilies = [...new Set(
+        inventoryData
+            .filter(item => item.Brand === selectedBrand)
+            .map(item => item.product_family)
+    )];
+    productFamilyDropdown.innerHTML = '<option value="" disabled selected>Välj produktfamilj</option>';
+
+    // Lägg till varje produktfamilj i dropdown
+    productFamilies.forEach(family => {
+        const option = document.createElement('option');
+        option.value = family;
+        option.textContent = family;
+        productFamilyDropdown.appendChild(option);
+    });
+
+    // Uppdatera reservdel när produktfamilj ändras
+    productFamilyDropdown.addEventListener('change', () => {
+        updateSparePartDropdown();
+    });
+}
+
+// Uppdatera dropdown för reservdelar baserat på vald produktfamilj
+function updateSparePartDropdown() {
+    const sparePartDropdown = document.getElementById('spare_part');
+    if (!sparePartDropdown) return; // Om dropdown inte finns, avbryt
+
+    const selectedProductFamily = document.getElementById('product_family').value;
+    const spareParts = [...new Set(
+        inventoryData
+            .filter(item => item.product_family === selectedProductFamily)
+            .map(item => item.spare_part)
+    )];
+    sparePartDropdown.innerHTML = '<option value="" disabled selected>Välj reservdel</option>';
+
+    // Lägg till varje reservdel i dropdown
+    spareParts.forEach(part => {
+        const option = document.createElement('option');
+        option.value = part;
+        option.textContent = part;
+        sparePartDropdown.appendChild(option);
     });
 }
 
@@ -68,6 +141,7 @@ function subtractItem(id) {
 // Lägg till reservdel
 document.getElementById('inventoryForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    const brand = document.getElementById('brand').value;
     const product_family = document.getElementById('product_family').value;
     const spare_part = document.getElementById('spare_part').value;
     const quantity = parseInt(document.getElementById('quantity').value);
@@ -76,7 +150,7 @@ document.getElementById('inventoryForm').addEventListener('submit', function(e) 
     fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, product_family, spare_part, quantity })
+        body: JSON.stringify({ Brand: brand, product_family, spare_part, quantity })
     }).then(() => {
         loadInventory();
         showToast(`Lagt till: ${product_family} - ${spare_part} - ${quantity}`, 'success');

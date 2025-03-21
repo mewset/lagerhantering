@@ -6,52 +6,9 @@
     <title>Lagerhantering</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        /* Ytterligare styling för bättre UX */
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            position: sticky;
-            top: 0;
-            background-color: #fff;
-            z-index: 1000;
-            padding: 1rem 0;
-        }
-        .btn {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .input-group {
-            max-width: 500px; /* Begränsa bredden på sökfältet */
-        }
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.05); /* Hover-effekt på tabellrader */
-        }
-        /* Placera toasten i övre högra hörnet */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050; /* Se till att toasten visas över andra element */
-        }
-        /* Extra styling för toasten */
-        .toast {
-            min-width: 250px;
-            max-width: 350px;
-        }
-        .toast-header {
-            background-color: #28a745;
-            color: white;
-        }
-        .toast-body {
-            background-color: #d4edda;
-        }
-    </style>
+    <!-- Tillagd CSS-fil -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
 </head>
 <body>
     <div class="container mt-5">
