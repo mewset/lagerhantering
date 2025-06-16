@@ -12,6 +12,11 @@
         <h1>Admin - Lagerhantering</h1>
         <a href="/" class="btn btn-secondary mb-3">Tillbaka till startsidan</a>
 
+        <!-- Laddningsindikator -->
+        <div id="loadingSpinner" class="spinner-border text-primary d-none" role="status">
+            <span class="visually-hidden">Laddar...</span>
+        </div>
+
         <form id="addForm" class="mb-4">
             <div class="mb-3">
                 <label for="brand" class="form-label">Kund</label>
@@ -56,18 +61,20 @@
             <tbody id="inventoryTable"></tbody>
         </table>
 
-        <div class="toast-container">
-            <div id="deleteToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <strong class="me-auto">Bekräfta radering</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    Är du säker på att du vill radera denna post? Detta kan inte ångras.
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-danger btn-sm me-2" id="confirmDelete">Bekräfta</button>
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Ångra</button>
-                    </div>
+        <!-- Bootstrap Toast-container för feedback -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+        <!-- Raderings-toast (popup) -->
+        <div id="deleteToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Bekräfta radering</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Är du säker på att du vill radera denna post? Detta kan inte ångras.
+                <div class="mt-2">
+                    <button type="button" class="btn btn-danger btn-sm me-2" id="confirmDelete">Bekräfta</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Ångra</button>
                 </div>
             </div>
         </div>
@@ -75,6 +82,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
     <script>
         let deleteId = null;
         const deleteToast = new bootstrap.Toast(document.getElementById('deleteToast'));
