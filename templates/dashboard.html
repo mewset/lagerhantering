@@ -28,20 +28,124 @@
             padding-right: 50px; /* padding till höger */
         }
 
-        /* Flex-layout för vänster och höger del */
-        .dashboard-section {
-            display: flex;
-            gap: 20px; /* Avstånd mellan vänster och höger del */
+        /* Dynamisk grid-layout för brands */
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--columns), 1fr);
+            gap: 20px;
+            --columns: 3; /* Default antal kolumner */
         }
 
         /* Styling för varje brand-sektion */
         .brand-section {
-            flex: 1; /* Båda sektionerna tar lika mycket plats */
             background-color: white;
             padding: 1rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            min-width: 300px; /* Minsta bredd för varje brand-sektion */
+            min-width: 250px;
+            transform: scale(var(--scale));
+            transform-origin: top left;
+            --scale: 1; /* Default skalning */
+        }
+        
+        /* Floating settings button */
+        .floating-settings {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .settings-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .settings-btn:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        /* Settings panel */
+        .settings-panel {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 280px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            display: none;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .settings-panel.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        .setting-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .setting-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .setting-group span {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* Kompakt läge */
+        .compact-mode .brand-section {
+            padding: 0.5rem;
+        }
+        
+        .compact-mode .spare-part {
+            padding: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .compact-mode h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .compact-mode h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
         }
 
         /* Styling för produktfamilj-kort */
@@ -82,17 +186,42 @@
     <div class="container-fluid dashboard-container">
         
         <!-- Huvudsektion för dashboarden -->
-        <div class="dashboard-section">
-            <!-- Vänster del: Första brand -->
-            <div class="brand-section" id="brandLeft">
-                <h2 id="brandLeftTitle">Brand 1</h2>
-                <div class="row" id="brandLeftContent"></div>
-            </div>
-
-            <!-- Höger del: Andra brand -->
-            <div class="brand-section" id="brandRight">
-                <h2 id="brandRightTitle">Brand 2</h2>
-                <div class="row" id="brandRightContent"></div>
+        <div id="brandsContainer" class="brands-grid">
+            <!-- Brands kommer att genereras dynamiskt här -->
+        </div>
+        
+        <!-- Floating Settings Button -->
+        <div class="floating-settings">
+            <button id="settingsBtn" class="settings-btn" title="Inställningar">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                </svg>
+            </button>
+            
+            <!-- Settings Panel -->
+            <div id="settingsPanel" class="settings-panel">
+                <h5>Dashboard Inställningar</h5>
+                
+                <div class="setting-group">
+                    <label for="scaleSlider">Skalning:</label>
+                    <input type="range" id="scaleSlider" min="50" max="200" value="100" step="10">
+                    <span id="scaleValue">100%</span>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="columnsSlider">Kolumner per rad:</label>
+                    <input type="range" id="columnsSlider" min="1" max="6" value="3" step="1">
+                    <span id="columnsValue">3</span>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="compactMode">
+                        <input type="checkbox" id="compactMode"> Kompakt läge
+                    </label>
+                </div>
+                
+                <button id="resetSettings" class="btn btn-sm btn-secondary">Återställ</button>
             </div>
         </div>
     </div>

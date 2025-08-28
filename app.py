@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 DATA_DIR = "data"
 DATA_FILE = os.path.join(DATA_DIR, "inventory.json")
+SETTINGS_FILE = os.path.join(DATA_DIR, "dashboard_settings.json")
 BACKUP_DIR = "db_backup"
 
 # Hjälpfunktion för att bestämma status och åtgärd
@@ -118,6 +119,34 @@ def write_inventory(data):
     except Exception as e:
         logger.error(f"Fel vid skrivning till inventory.json: {e}")
 
+def read_settings():
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        else:
+            # Standardinställningar
+            return {
+                "scale": 100,
+                "columns": 3,
+                "compact": False
+            }
+    except Exception as e:
+        logger.error(f"Fel vid läsning av dashboard_settings.json: {e}")
+        return {
+            "scale": 100,
+            "columns": 3,
+            "compact": False
+        }
+
+def write_settings(data):
+    try:
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+        logger.info("Dashboard-inställningar sparade")
+    except Exception as e:
+        logger.error(f"Fel vid skrivning till dashboard_settings.json: {e}")
+
 def backup_database():
     try:
         now = datetime.now()
@@ -164,7 +193,7 @@ def dashboard():
 @app.route("/logs")
 def logs():
     try:
-        with open('app.log', 'r', encoding='utf-8') as f:
+        with open('app.log', 'r', encoding='utf-8', errors='replace') as f:
             log_lines = f.readlines()
         if request.args.get('format') == 'json':
             return jsonify({"logs": log_lines})
@@ -287,6 +316,35 @@ def check_version():
             logger.error(f"Fel vid manuell uppdatering: {str(e)}")
             result = {"update_needed": False, "message": "Ett oväntat fel inträffade vid uppdatering."}
     return jsonify(result)
+
+@app.route("/api/settings", methods=["GET"])
+def get_settings():
+    settings = read_settings()
+    return jsonify(settings)
+
+@app.route("/api/settings", methods=["POST"])
+def save_settings():
+    try:
+        new_settings = request.json
+        
+        # Validera inställningar
+        valid_settings = {
+            "scale": int(new_settings.get("scale", 100)),
+            "columns": int(new_settings.get("columns", 3)),
+            "compact": bool(new_settings.get("compact", False))
+        }
+        
+        # Begränsa värden till rimliga intervall
+        valid_settings["scale"] = max(50, min(200, valid_settings["scale"]))
+        valid_settings["columns"] = max(1, min(6, valid_settings["columns"]))
+        
+        write_settings(valid_settings)
+        logger.info(f"Dashboard-inställningar uppdaterade: {valid_settings}")
+        return jsonify({"message": "Settings saved", "settings": valid_settings}), 200
+        
+    except Exception as e:
+        logger.error(f"Fel vid sparning av inställningar: {e}")
+        return jsonify({"message": "Failed to save settings", "error": str(e)}), 500
 
 if __name__ == "__main__":
     debug = '--debug' in sys.argv
