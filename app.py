@@ -8,8 +8,7 @@ import time
 import threading
 import shutil
 import logging
-import subprocess
-import psutil
+import signal
 
 app = Flask(__name__)
 
@@ -36,55 +35,18 @@ def get_status_and_action(item):
     else:
         return "mid", "Se över saldot"
 
-def kill_processes_using_port(port):
-    for conn in psutil.net_connections():
-        if conn.laddr.port == port and conn.pid:
-            try:
-                proc = psutil.Process(conn.pid)
-                proc.terminate()
-                logger.info(f"Avslutade process {proc.pid} som använde port {port}")
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
-
-def check_git_version(manual=False):
-    try:
-        logger.info("Startar versionsvalidering mot GitHub...")
-        local_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-        logger.info(f"Lokal commit-hash: {local_commit}")
-        
-        subprocess.run(["git", "fetch", "origin"], check=True)
-        remote_commit = subprocess.check_output(["git", "rev-parse", "origin/main"], text=True).strip()
-        logger.info(f"Remote commit-hash (GitHub): {remote_commit}")
-        
-        if local_commit != remote_commit:
-            logger.warning("Lokala och remote versioner skiljer sig.")
-            if manual:
-                logger.info("Manuell kontroll hittade ny version. Förbereder omstart för uppdatering.")
-                return {"update_needed": True, "message": "Ny version hittades. Servern startas om för att uppdatera."}
-            status = subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()
-            if status:
-                logger.error("Lokala ändringar detekterade. Kan inte uppdatera automatiskt.")
-                return False if not manual else {"update_needed": False, "message": "Lokala ändringar hindrar uppdatering."}
-            logger.info("Kör 'git pull origin main'...")
-            result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
-            if result.returncode == 0:
-                logger.info("Uppdatering lyckades:\n" + result.stdout)
-                logger.info("Startar om applikationen...")
-                kill_processes_using_port(5000)
-                subprocess.Popen([sys.executable, "app.py"], cwd=os.getcwd())
-                sys.exit(0)
-            else:
-                logger.error("Misslyckades med att uppdatera:\n" + result.stderr)
-                return False if not manual else {"update_needed": False, "message": "Uppdatering misslyckades."}
-        else:
-            logger.info("Lokala och remote versioner är identiska.")
-            return True if not manual else {"update_needed": False, "message": "Ingen ny version hittades."}
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Fel vid Git-kommando: {e.output}")
-        return False if not manual else {"update_needed": False, "message": "Fel vid versionskontroll."}
-    except Exception as e:
-        logger.error(f"Oväntat fel vid versionsvalidering: {str(e)}")
-        return False if not manual else {"update_needed": False, "message": "Ett oväntat fel inträffade."}
+# Graceful shutdown hantering
+def setup_signal_handlers():
+    """Konfigurera signal handlers för graceful shutdown"""
+    def signal_handler(signum, frame):
+        logger.info(f"Mottagen signal {signum}. Stänger av gracefully...")
+        logger.info("Sparar eventuella pågående transaktioner...")
+        logger.info("Flask-server stängs av")
+        sys.exit(0)
+    
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    logger.info("Signal handlers konfigurerade för graceful shutdown")
 
 logger.info("Server Startas...")
 logger.info("Läser in modul: Filhantering")
@@ -101,8 +63,9 @@ if not os.path.exists(DATA_FILE):
 else:
     logger.info("Databas hittades: inventory.json")
 
-if not check_git_version():
-    logger.error("Versionsvalidering misslyckades vid uppstart. Startar med lokal version.")
+# Konfigurera graceful shutdown
+setup_signal_handlers()
+logger.info("Uppdateringslogik har flyttats till updater.py")
 
 def read_inventory():
     try:
@@ -290,32 +253,16 @@ def delete_item(item_id):
 
 @app.route("/api/check_version", methods=["GET"])
 def check_version():
-    result = check_git_version(manual=True)
-    if result["update_needed"]:
-        logger.info("Ny version hittades via manuell kontroll. Kör git pull och startar om servern.")
-        try:
-            pull_result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True)
-            if pull_result.returncode == 0:
-                logger.info("Uppdatering lyckades:\n" + pull_result.stdout)
-                response = Response(
-                    json.dumps({"update_needed": True, "message": "Ny version hittades. Servern startas om för att uppdatera."}),
-                    status=200,
-                    mimetype='application/json'
-                )
-                def restart_server():
-                    time.sleep(1)
-                    kill_processes_using_port(5000)
-                    subprocess.Popen(['cmd.exe', '/k', sys.executable, 'app.py'], cwd=os.getcwd())
-                    sys.exit(0)
-                threading.Thread(target=restart_server, daemon=True).start()
-                return response
-            else:
-                logger.error("Misslyckades med att uppdatera:\n" + pull_result.stderr)
-                result = {"update_needed": False, "message": "Uppdatering misslyckades."}
-        except Exception as e:
-            logger.error(f"Fel vid manuell uppdatering: {str(e)}")
-            result = {"update_needed": False, "message": "Ett oväntat fel inträffade vid uppdatering."}
-    return jsonify(result)
+    """API endpoint för att kontrollera om updater.py körs"""
+    try:
+        # Kontrollera om updater.py lock file existerar
+        if os.path.exists("updater.lock"):
+            return jsonify({"update_needed": False, "message": "Uppdateringsprocess pågår redan"})
+        else:
+            return jsonify({"update_needed": False, "message": "Uppdateringar hanteras av updater.py. Kör 'python updater.py --check' för manuell kontroll."})
+    except Exception as e:
+        logger.error(f"Fel vid kontroll av uppdateringsstatus: {e}")
+        return jsonify({"update_needed": False, "message": "Kunde inte kontrollera uppdateringsstatus"}), 500
 
 @app.route("/api/settings", methods=["GET"])
 def get_settings():

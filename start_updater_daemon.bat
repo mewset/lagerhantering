@@ -1,0 +1,3 @@
+@echo off
+echo Startar UpdaterService som daemon...
+python updater.py --daemon

@@ -11,3 +11,5 @@ __pycache__/
 # IDE-filer
 .idea/
 .vscode/
+
+.claude/

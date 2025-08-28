@@ -1,0 +1,14 @@
+2025-08-28 11:11:37,001 [INFO] UpdaterService initialiserad
+2025-08-28 11:11:37,002 [INFO] ==================================================
+2025-08-28 11:11:37,003 [INFO] Startar schemalagd uppdateringskontroll
+2025-08-28 11:11:37,003 [INFO] ==================================================
+2025-08-28 11:11:37,009 [INFO] Lock file skapad med PID 24424
+2025-08-28 11:11:37,009 [INFO] Startar versionsvalidering mot GitHub...
+2025-08-28 11:11:37,172 [INFO] Lokal commit-hash: e6f0122a41d1f8dca4fe4bbfeb5b31633dd896e2
+2025-08-28 11:11:40,293 [INFO] Remote commit-hash (GitHub): e6f0122a41d1f8dca4fe4bbfeb5b31633dd896e2
+2025-08-28 11:11:40,294 [INFO] Lokala och remote versioner är identiska
+2025-08-28 11:11:40,294 [INFO] Ingen uppdatering behövs
+2025-08-28 11:11:40,298 [INFO] Lock file borttaget
+2025-08-28 11:11:40,298 [INFO] ==================================================
+2025-08-28 11:11:40,298 [INFO] Uppdateringskontroll slutförd
+2025-08-28 11:11:40,299 [INFO] ==================================================
