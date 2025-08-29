@@ -156,11 +156,53 @@ def dashboard():
 @app.route("/logs")
 def logs():
     try:
+        lines_per_page = int(request.args.get('lines', 1000))  # Default 1000 lines
+        page = int(request.args.get('page', 1))
+        
+        # Count total lines efficiently
+        total_lines = 0
         with open('app.log', 'r', encoding='utf-8', errors='replace') as f:
-            log_lines = f.readlines()
+            for _ in f:
+                total_lines += 1
+        
+        # Calculate skip and take
+        skip_lines = (page - 1) * lines_per_page
+        
+        # Read only the needed lines
+        log_lines = []
+        with open('app.log', 'r', encoding='utf-8', errors='replace') as f:
+            for i, line in enumerate(f):
+                if i < skip_lines:
+                    continue
+                if len(log_lines) >= lines_per_page:
+                    break
+                log_lines.append(line)
+        
+        # Reverse to show newest first
+        log_lines.reverse()
+        
+        total_pages = (total_lines + lines_per_page - 1) // lines_per_page
+        
         if request.args.get('format') == 'json':
-            return jsonify({"logs": log_lines})
-        return render_template("logs.html", logs=log_lines, current_date=datetime.now().strftime("%Y-%m-%d"))
+            return jsonify({
+                "logs": log_lines,
+                "pagination": {
+                    "page": page,
+                    "lines_per_page": lines_per_page,
+                    "total_lines": total_lines,
+                    "total_pages": total_pages
+                }
+            })
+        
+        return render_template("logs.html", 
+                             logs=log_lines, 
+                             current_date=datetime.now().strftime("%Y-%m-%d"),
+                             pagination={
+                                 "page": page,
+                                 "lines_per_page": lines_per_page,
+                                 "total_lines": total_lines,
+                                 "total_pages": total_pages
+                             })
     except Exception as e:
         logger.error(f"Fel vid läsning av loggar: {e}")
         if request.args.get('format') == 'json':

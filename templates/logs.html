@@ -36,6 +36,25 @@
 
         <div class="log-box">
             <h3>Råloggar</h3>
+            {% if pagination %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <small class="text-muted">Visar {{ pagination.lines_per_page }} av {{ pagination.total_lines }} totala rader (sida {{ pagination.page }} av {{ pagination.total_pages }})</small>
+                </div>
+                <div>
+                    <div class="btn-group" role="group">
+                        {% if pagination.page > 1 %}
+                            <a href="/logs?page=1&lines={{ pagination.lines_per_page }}" class="btn btn-sm btn-outline-secondary">Första</a>
+                            <a href="/logs?page={{ pagination.page - 1 }}&lines={{ pagination.lines_per_page }}" class="btn btn-sm btn-outline-secondary">Föregående</a>
+                        {% endif %}
+                        {% if pagination.page < pagination.total_pages %}
+                            <a href="/logs?page={{ pagination.page + 1 }}&lines={{ pagination.lines_per_page }}" class="btn btn-sm btn-outline-secondary">Nästa</a>
+                            <a href="/logs?page={{ pagination.total_pages }}&lines={{ pagination.lines_per_page }}" class="btn btn-sm btn-outline-secondary">Sista</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <pre id="rawLogs">{% for log in logs %}{{ log|replace('\ufffd', 'å')|replace('\u001b[36m', '')|replace('\u001b[0m', '') }}{% endfor %}</pre>
         </div>
     </div>
@@ -44,7 +63,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
     <script>
     function analyzeLogs() {
-        fetch('/logs?format=json')
+        fetch('/logs?format=json&lines=10000')
             .then(response => response.json())
             .then(data => {
                 const logs = data.logs || [];
