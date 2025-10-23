@@ -12,6 +12,8 @@ class BackupService:
         self.logger = logger
 
     def backup_database(self, max_backups: int = 5) -> bool:
+        from utils.exceptions import BackupError
+
         try:
             now = datetime.now()
             if now.weekday() >= 5:
@@ -38,9 +40,11 @@ class BackupService:
 
         except Exception as e:
             self.logger.error(f"Fel vid backup: {e}")
-            return False
+            raise BackupError("database backup", str(e))
 
     def backup_for_update(self) -> bool:
+        from utils.exceptions import BackupError
+
         try:
             if not os.path.exists(self.backup_dir):
                 os.makedirs(self.backup_dir)
@@ -60,7 +64,7 @@ class BackupService:
 
         except Exception as e:
             self.logger.error(f"Fel vid databas backup: {e}")
-            return False
+            raise BackupError("update backup", str(e))
 
     def create_version_backup(self, version_backup_dir: str, files_to_backup: list) -> Optional[str]:
         try:

@@ -20,6 +20,14 @@
             overflow-x: hidden; /* Förhindra horisontell scroll */
         }
 
+        /* CSS-variabler för dashboard-inställningar */
+        :root {
+            --columns: 3; /* Default antal kolumner */
+            --scale: 1; /* Default skalning */
+            --spare-parts-per-row: 5; /* Default antal reservdelar per rad i horisontell layout */
+            --brands-per-row: 3; /* Default antal brands per rad i horisontell layout */
+        }
+
         /* Huvudcontainer för dashboarden */
         .dashboard-container {
             width: 100%; /* Full bredd */
@@ -33,7 +41,6 @@
             display: grid;
             grid-template-columns: repeat(var(--columns), 1fr);
             gap: 20px;
-            --columns: 3; /* Default antal kolumner */
         }
 
         /* Styling för varje brand-sektion */
@@ -45,7 +52,6 @@
             min-width: 250px;
             transform: scale(var(--scale));
             transform-origin: top left;
-            --scale: 1; /* Default skalning */
         }
         
         /* Floating settings button */
@@ -132,20 +138,42 @@
         .compact-mode .brand-section {
             padding: 0.5rem;
         }
-        
+
         .compact-mode .spare-part {
             padding: 0.25rem;
             margin-bottom: 0.25rem;
         }
-        
+
         .compact-mode h2 {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .compact-mode h3 {
             font-size: 1rem;
             margin-bottom: 0.25rem;
+        }
+
+        /* Horisontell layout */
+        .horizontal-mode .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--brands-per-row), 1fr);
+            gap: 20px;
+        }
+
+        .horizontal-mode .brand-section {
+            min-width: 300px;
+        }
+
+        /* Grid för spare parts i horisontell layout */
+        .horizontal-mode .family-card {
+            display: grid;
+            grid-template-columns: repeat(var(--spare-parts-per-row), minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .horizontal-mode .family-card h3 {
+            grid-column: 1 / -1; /* Titeln tar upp hela bredden */
         }
 
         /* Styling för produktfamilj-kort */
@@ -216,11 +244,35 @@
                 </div>
                 
                 <div class="setting-group">
+                    <label for="brandPriority">Prioriterade brands (kommaseparerat):</label>
+                    <input type="text" id="brandPriority" class="form-control form-control-sm" placeholder="t.ex. HP, Lenovo, Apple">
+                    <small class="text-muted">Dessa brands visas först</small>
+                </div>
+
+                <div class="setting-group">
                     <label for="compactMode">
                         <input type="checkbox" id="compactMode"> Kompakt läge
                     </label>
                 </div>
-                
+
+                <div class="setting-group">
+                    <label for="horizontalMode">
+                        <input type="checkbox" id="horizontalMode"> Horisontell layout
+                    </label>
+                </div>
+
+                <div class="setting-group horizontal-only" id="brandsPerRowGroup" style="display: none;">
+                    <label for="brandsPerRowSlider">Brands per rad:</label>
+                    <input type="range" id="brandsPerRowSlider" min="1" max="6" value="3" step="1">
+                    <span id="brandsPerRowValue">3</span>
+                </div>
+
+                <div class="setting-group horizontal-only" id="sparePartsGroup" style="display: none;">
+                    <label for="sparePartsSlider">Reservdelar per rad:</label>
+                    <input type="range" id="sparePartsSlider" min="1" max="10" value="5" step="1">
+                    <span id="sparePartsValue">5</span>
+                </div>
+
                 <button id="resetSettings" class="btn btn-sm btn-secondary">Återställ</button>
             </div>
         </div>

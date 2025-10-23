@@ -287,5 +287,41 @@ function showToast(message, type = 'info') {
     toast.show();
 }
 
+// Funktion för att rensa sökfältet
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    updateTable(); // Uppdatera tabellen
+}
+
+// Funktion för att utföra sökning
+function performSearch() {
+    const searchValue = document.getElementById('searchInput').value;
+    updateTable(searchValue); // Uppdatera tabellen med sökterm
+}
+
+// Funktion för att sortera tabellen
+function sortTable(columnIndex) {
+    const table = document.getElementById('inventoryTable');
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const isAscending = !table.getAttribute('data-sort-asc');
+
+    rows.sort((a, b) => {
+        const aValue = a.children[columnIndex].textContent;
+        const bValue = b.children[columnIndex].textContent;
+        return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+    });
+
+    // Ta bort befintliga rader
+    while (table.firstChild) {
+        table.removeChild(table.firstChild);
+    }
+
+    // Lägg till sorterade rader
+    rows.forEach(row => table.appendChild(row));
+
+    // Uppdatera sorteringsstatus
+    table.setAttribute('data-sort-asc', isAscending);
+}
+
 // Ladda inventariet vid start
 window.onload = loadInventory;

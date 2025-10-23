@@ -59,7 +59,7 @@ def initialize_app():
 
 def create_services():
     """Create and configure all services"""
-    inventory_model = InventoryModel(config.data_file)
+    inventory_model = InventoryModel(config.data_file, config.CACHE_TTL_SECONDS)
     inventory_service = InventoryService(inventory_model, logger)
     backup_service = BackupService(config.DATA_DIR, config.BACKUP_DIR, logger)
 
@@ -94,6 +94,12 @@ def admin():
 def dashboard():
     logger.info("Renderar dashboard.html")
     return render_template("dashboard.html", current_date=datetime.now().strftime("%Y-%m-%d"))
+
+
+@app.route("/changelog")
+def changelog():
+    logger.info("Renderar changelog.html")
+    return render_template("changelog.html", current_date=datetime.now().strftime("%Y-%m-%d"))
 
 
 @app.route("/api/check_version", methods=["GET"])

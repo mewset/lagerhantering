@@ -65,6 +65,8 @@ class UpdaterService:
             return None
 
     def stop_app_gracefully(self, pid: int, timeout: int = 30) -> bool:
+        from utils.exceptions import ProcessManagementError
+
         try:
             self.logger.info(f"Skickar SIGTERM till process {pid}")
             process = psutil.Process(pid)
@@ -84,15 +86,19 @@ class UpdaterService:
                 return True
             except Exception as e:
                 self.logger.error(f"Kunde inte tvångsstänga process: {e}")
-                return False
+                raise ProcessManagementError(pid, "force kill", str(e))
         except psutil.NoSuchProcess:
             self.logger.info("Process redan stängd")
             return True
+        except ProcessManagementError:
+            raise
         except Exception as e:
             self.logger.error(f"Fel vid graceful shutdown: {e}")
-            return False
+            raise ProcessManagementError(pid, "graceful shutdown", str(e))
 
     def check_git_version(self) -> Tuple[bool, Optional[str], Optional[str]]:
+        from utils.exceptions import GitOperationError
+
         try:
             self.logger.info("Startar versionsvalidering mot GitHub...")
 
@@ -126,12 +132,14 @@ class UpdaterService:
 
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Fel vid Git-kommando: {e}")
-            return False, None, None
+            raise GitOperationError("version check", str(e))
         except Exception as e:
             self.logger.error(f"Oväntat fel vid versionsvalidering: {str(e)}")
-            return False, None, None
+            raise GitOperationError("version check", str(e))
 
     def perform_git_update(self) -> bool:
+        from utils.exceptions import GitOperationError
+
         try:
             status = subprocess.check_output(
                 ["git", "status", "--porcelain"],
@@ -167,14 +175,16 @@ class UpdaterService:
             else:
                 self.logger.error("Git pull misslyckades:")
                 self.logger.error(result.stderr)
-                return False
+                raise GitOperationError("pull", result.stderr)
 
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Fel vid git update: {e}")
-            return False
+            raise GitOperationError("update", str(e))
+        except GitOperationError:
+            raise
         except Exception as e:
             self.logger.error(f"Oväntat fel vid git update: {str(e)}")
-            return False
+            raise GitOperationError("update", str(e))
 
     def start_app(self) -> bool:
         try:
@@ -201,6 +211,8 @@ class UpdaterService:
             return False
 
     def run_update_check(self) -> None:
+        from utils.exceptions import GitOperationError, ProcessManagementError, BackupError
+
         self.logger.info("=" * 50)
         self.logger.info("Startar schemalagd uppdateringskontroll")
         self.logger.info("=" * 50)
@@ -252,6 +264,12 @@ class UpdaterService:
             else:
                 self.logger.error("Kunde inte starta app.py efter uppdatering")
 
+        except GitOperationError as e:
+            self.logger.error(f"Git-fel under uppdateringsprocess: {e}")
+        except ProcessManagementError as e:
+            self.logger.error(f"Process management-fel under uppdateringsprocess: {e}")
+        except BackupError as e:
+            self.logger.error(f"Backup-fel under uppdateringsprocess: {e}")
         except Exception as e:
             self.logger.error(f"Oväntat fel under uppdateringsprocess: {e}")
         finally:

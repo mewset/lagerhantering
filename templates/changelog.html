@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - Lagerhantering</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary-color: #3a86ff;
+            --secondary-color: #4361ee;
+            --accent-color: #3a0ca3;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #52b788;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: var(--dark-color);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background-color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0;
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .changelog-entry {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .changelog-entry h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .changelog-date {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .changelog-entry ul {
+            margin-bottom: 0;
+            padding-left: 1.5rem;
+        }
+
+        .changelog-entry li {
+            margin-bottom: 0.5rem;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .badge-new {
+            background-color: var(--success-color);
+        }
+
+        .badge-fix {
+            background-color: #e63946;
+        }
+
+        .badge-improvement {
+            background-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header med knappar -->
+        <div class="header-container">
+            <h1><i class="bi bi-clock-history me-2"></i>Changelog</h1>
+            <div>
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-house-fill me-1"></i> Tillbaka
+                </a>
+            </div>
+        </div>
+
+        <!-- Changelog innehåll -->
+        <div class="changelog-content">
+            <!-- Version 2.1.0 -->
+            <div class="changelog-entry">
+                <h3>Version 2.1.0</h3>
+                <p class="text-muted mb-2">Dashboard får kraftfulla anpassningsmöjligheter med horisontell layout, brand-prioritering och dynamiska inställningar.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-10-23</p>
+                <ul>
+                    <li><span class="badge badge-new">Nytt</span>Changelog-sida för att visa versionshistorik</li>
+                    <li><span class="badge badge-new">Nytt</span>Dashboard med avancerade inställningar (skalning, kolumner, horisontell layout)</li>
+                    <li><span class="badge badge-new">Nytt</span>Brand-prioritering för att visa viktiga brands först i dashboard</li>
+                    <li><span class="badge badge-new">Nytt</span>Anpassningsbara inställningar för brands per rad och reservdelar per rad</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Förbättrad felhantering med användarvänliga meddelanden</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Inställningar sparas automatiskt och synkroniseras mellan sessioner</li>
+                </ul>
+            </div>
+
+            <!-- Version 2.0.0 -->
+            <div class="changelog-entry">
+                <h3>Version 2.0.0</h3>
+                <p class="text-muted mb-2">Stor refaktorering till modulär arkitektur för bättre underhållbarhet och skalbarhet.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-09-19</p>
+                <ul>
+                    <li><span class="badge badge-new">Nytt</span>Modulär arkitektur med separata services och routes</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Refaktorerad kodstruktur för bättre underhållbarhet</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Separerade concerns: models, services, routes, utils</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Förbättrad felhantering med custom exceptions</li>
+                </ul>
+            </div>
+
+            <!-- Version 1.3.0 -->
+            <div class="changelog-entry">
+                <h3>Version 1.3.0</h3>
+                <p class="text-muted mb-2">Automatiska uppdateringar introduceras tillsammans med optimerad logghantering.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-08-28</p>
+                <ul>
+                    <li><span class="badge badge-new">Nytt</span>Implementerat updater.py för automatiska uppdateringar</li>
+                    <li><span class="badge badge-new">Nytt</span>Schemalagd uppdateringskontroll varje måndag kl 02:00</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Optimerad /logs endpoint för stora logfiler med paginering</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Backup före uppdateringar</li>
+                </ul>
+            </div>
+
+            <!-- Version 1.2.0 -->
+            <div class="changelog-entry">
+                <h3>Version 1.2.0</h3>
+                <p class="text-muted mb-2">Förbättringar av admin-panelen med bättre kodkvalitet och struktur.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-06-16</p>
+                <ul>
+                    <li><span class="badge badge-improvement">Förbättring</span>Implementerade best-practice förbättringar för admin.html och admin.js</li>
+                    <li><span class="badge badge-fix">Buggfix</span>Förbättrad kodkvalitet och struktur i admin-funktionalitet</li>
+                </ul>
+            </div>
+
+            <!-- Version 1.1.0 -->
+            <div class="changelog-entry">
+                <h3>Version 1.1.0</h3>
+                <p class="text-muted mb-2">Stöd för flera brands/kunder samt omfattande UX-förbättringar i dashboard.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-03-19</p>
+                <ul>
+                    <li><span class="badge badge-new">Nytt</span>Brand-fält för att differentiera mellan olika kunder/brands</li>
+                    <li><span class="badge badge-new">Nytt</span>Dashboard uppdaterad för att visa flera brands separat</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Dashboard anpassad för olika skärmstorlekar</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>Auto-uppdatering av dashboard var 3:e sekund</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>CSS-justeringar för bättre läsbarhet på fullHD-skärmar</li>
+                    <li><span class="badge badge-improvement">Förbättring</span>UX-förbättringar och stiluppdateringar</li>
+                    <li><span class="badge badge-fix">Buggfix</span>Fixat toast-meddelanden som inte visades korrekt</li>
+                    <li><span class="badge badge-fix">Buggfix</span>Fixat problem med brand-fältet i formulär</li>
+                </ul>
+            </div>
+
+            <!-- Version 1.0.0 -->
+            <div class="changelog-entry">
+                <h3>Version 1.0.0</h3>
+                <p class="text-muted mb-2">Initial release med komplett lagerhanteringssystem inklusive dashboard och admin-panel.</p>
+                <p class="changelog-date"><i class="bi bi-calendar3 me-1"></i>2025-03-10</p>
+                <ul>
+                    <li><span class="badge badge-new">Nytt</span>Initial release av lagerhanteringssystemet</li>
+                    <li><span class="badge badge-new">Nytt</span>Grundläggande CRUD-operationer för reservdelar</li>
+                    <li><span class="badge badge-new">Nytt</span>Admin-panel för hantering av produkter och tröskelvärden</li>
+                    <li><span class="badge badge-new">Nytt</span>Dashboard för visuell överblick av lagerstatus</li>
+                    <li><span class="badge badge-new">Nytt</span>Färgkodad status (låg/mellan/hög) baserat på tröskelvärden</li>
+                    <li><span class="badge badge-new">Nytt</span>Toast-notifikationer för användarfeedback</li>
+                    <li><span class="badge badge-new">Nytt</span>Subtract-funktion för att ta reservdelar från lager</li>
+                    <li><span class="badge badge-new">Nytt</span>Automatisk versionsvalidering och uppdateringsmekanism</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

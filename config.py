@@ -38,5 +38,26 @@ class AppConfig:
         os.makedirs(self.BACKUP_DIR, exist_ok=True)
 
 
+# Singleton pattern för att säkerställa en enda config-instans
+_config_instance: Optional[AppConfig] = None
+
+
 def get_config() -> AppConfig:
-    return AppConfig()
+    """
+    Hämtar den globala konfigurationsinstansen (Singleton).
+
+    Returns:
+        AppConfig: Den globala konfigurationsinstansen
+    """
+    global _config_instance
+    if _config_instance is None:
+        _config_instance = AppConfig()
+    return _config_instance
+
+
+def reset_config() -> None:
+    """
+    Återställer konfigurationsinstansen (huvudsakligen för testning).
+    """
+    global _config_instance
+    _config_instance = None

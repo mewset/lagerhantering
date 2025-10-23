@@ -41,12 +41,12 @@ class InventoryItem:
 
 
 class InventoryModel:
-    def __init__(self, data_file: str):
+    def __init__(self, data_file: str, cache_ttl: float = 1.0):
         self.data_file = data_file
         self._lock = threading.RLock()
         self._cache = None
         self._cache_timestamp = 0
-        self._cache_ttl = 1.0
+        self._cache_ttl = cache_ttl
 
     def _read_file(self) -> List[Dict[str, Any]]:
         try:
